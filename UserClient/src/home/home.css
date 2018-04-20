@@ -1,0 +1,440 @@
+@import url('https://rsms.me/inter/inter-ui.css');
+
+/*------------------------GENERAL------------------------*/
+body {
+  font-family: 'Inter UI', sans-serif;
+  font-weight: 'Regular';
+}
+
+
+#homepageWrapper {
+  top: 0;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+/*------------------------LEFT SIDE------------------------*/
+
+#sidePane {
+  text-align: center;
+  width: 50vw;
+  height: 100vh;
+  left: 0;
+  position: relative;
+  padding: 0;
+  margin: 0;
+  border-right: 1px solid rgba(0,0,0,0.07);
+  box-shadow: 0 2px  rgba(0,0,0,0.37);
+}
+
+#sidePane > h1 {
+  font-size: 6rem;
+  color: #000000;
+  font-weight: 400;
+  position: relative;
+  top: 13vh;
+  /*border: 1px solid red;*/
+}
+
+#sidePane > h2 {
+  margin: 1vh;
+  position: relative;
+  top: 20vh;
+  width: 30vw;
+  line-height: 1.5;
+  margin: 0 auto;
+  font-size: 1.7rem;
+}
+
+#sidePane > p {
+  margin-top: 5vh;
+  font-size: 1rem;
+  position: relative;
+  top: 20vh;
+}
+
+/*-----------------------LOGOS-----------------------------------*/
+
+#logoSprite {
+  /*opacity: 0;*/
+  /*border: 1px solid green;*/
+  width: 49vw;
+  height: 50px;
+  position: absolute;
+  margin: 0 auto;
+  bottom: 12vh;
+  background-image: url('../images/logoSprite.png');
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+
+/*------------------------RIGHT SIDE------------------------*/
+
+#loginPane {
+  width: 49vw;
+  height: 100vh;
+  font-size: 1.3rem;
+  border-left: 0.5px solid rgba(0,0,0,0.06);
+}
+
+
+#loginPatient, #loginProvider {
+  padding: 20px;
+  border-radius: 5px;
+  border: 0.5px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.17);
+  border-radius: 5px;
+  color: #000;
+  /*border: 1px solid blue;*/
+  position: relative;
+  top: 16vh;
+  height: 11vh;
+  width: 25vw;
+  margin: 0 auto;
+}
+
+#loginPatient {
+  background: rgba(186,203,204,0.41);
+
+}
+
+#loginProvider {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+
+#loginPatient > h3 , #loginProvider > h3 {
+  font-weight: 400;
+  /*border: 1px solid;*/
+}
+
+/*------------------------CONTRACTS------------------------*/
+
+#contractPatient, #contractProvider {
+  color: #000;
+  height: 10vh;
+  line-height: 1.6;
+  padding: 20px;
+  border-radius: 5px;
+  border: 0.5px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.17);
+  position: relative;
+  top: 17vh;
+  width: 25vw;
+  height: auto;
+  margin: 0 auto;
+}
+
+#contractPatient {
+  background: rgba(186,203,204,0.41);
+}
+
+#contractProvider{
+  color: rgba(52, 66, 86, 0.8);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+#contractPatient > div , #contractProvider > div {
+  font-size: 1rem;
+}
+
+#contractPatient >  div > span.preview , #contractProvider >  div > span.preview {
+  color: rgba(0,0,0,0.5);
+  font-size: 1rem;
+  margin-left: 10px;
+}
+
+#contractPatient >  div > span.preview:hover , #contractProvider >  div > span.preview:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/*------------------------CREATE IDENTITY------------------------*/
+
+#identityPatient, #identityProvider {
+  padding: 20px;
+  border-radius: 5px;
+  border: 0.5px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.17);
+  /*border: 1px solid orange;*/
+  position: relative;
+  top: 18vh;
+  width: 25vw;
+  height: auto;
+  margin: 0 auto;
+}
+
+#identityPatient {
+  color: #fff;
+  background: rgba(186,203,204,0.41);
+}
+
+#identityPatient  > h3, #identityProvider > h3, #contractPatient > h3, #contractProvider > h3 {
+  font-weight: 400;
+  color: #000;
+  margin-top: 0;
+}
+
+#identityProvider{
+  color: rgba(52, 66, 86, 0.8);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/*------------------------TOGGLE------------------------*/
+.switch {
+  border: 1px solid #ccc;
+  width: 50px;
+  height: 26px;
+  border-radius: 13px;
+  cursor: pointer;
+  float: right;
+}
+
+.switch-toggle:hover {
+  cursor: pointer;
+}
+
+.switch-toggle {
+  border: 1px solid #999;
+  box-shadow: 1px 1px 1px #ccc;
+  width: 25px;
+  height: 24px;
+  left: 0;
+  border-radius: 12px;
+  background: white;
+  position: relative;
+  -webkit-transition: left .2s ease-in-out;
+  transition: left .2s ease-in-out;
+}
+
+.switch.on {
+  background: #ccc;
+}
+
+.switch.on .switch-toggle {
+  left: 23px;
+}
+
+.switch.disabled {
+  cursor: not-allowed;
+}
+
+
+/*------------------------INPUT FIELDS------------------------*/
+
+.inputStyle {
+  margin-right: 0.5vw;
+  margin-bottom: 1vh;
+  border-radius: 3px;
+  width: 150px; 
+  padding: 5px 8px;
+  position: relative;
+  border: 0.5px solid rgba(0,0,0,0.05);
+  border-radius: 4px;
+  background: #FFFFFF;
+  z-index: 1;
+}
+
+.inputStyle::-webkit-input-placeholder {
+  color: #ccc;
+}
+
+.inputStyle::-moz-placeholder {
+  color: #ccc;
+}
+
+.inputStyle:-ms-input-placeholder {
+  color: #ccc;
+}
+
+.inputStyle::placeholder {
+  color: #ccc;
+}
+
+.inputStyle:focus {
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  background-color: rgba(255,255,255,0.9);
+  color: rgb(52, 66, 86);
+}
+
+#loginUser.inputStyle, #loginPassword.inputStyle {
+  width: 100px; 
+}
+/*------------------------BUTTONS------------------------*/
+
+button.loginStyle {
+  margin-right: 0.5vw;
+  margin-bottom: 2vh;
+  width: auto;
+  padding: 5px 8px;
+  position: relative;
+  display: inline-block;
+  background: #FFFFFF;
+  border: 0 solid rgba(0,0,0,0.10);
+  box-shadow: 0 0 1px 0 rgba(0,0,0,0.22);
+  border-radius: 3.5px;
+}
+
+button.loginStyle:hover {
+  background-color: rgba(255,255,255,0.7);
+  cursor: pointer;
+}
+
+
+/*-----------------------Seed Modal-----------------------------------*/
+
+#seedModal, #previewModal {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+
+#seedModal .modalBackground {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+}
+#previewModal .modalBackground {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #fff);
+}
+
+#seedModal .modalContent, #previewModal .modalContent {
+  position: fixed;
+  background-color:  rgba(255, 255, 255, 0.98);
+  width: 50vw;
+  height: auto;
+  overflow: visible;
+  top: 35vh;
+  left: 24.5vw;
+  padding: 2vh;
+  /*border: 1px solid #888;*/
+  display: none;
+  margin: auto;  
+  background: #F6F6F6;
+}
+
+#seedModal.display, #seedModal .modalContent.display {
+  display: block;
+  border: 0 solid rgba(0,0,0,0.20);
+  box-shadow: 0 2px 10px 0 rgba(0,0,0,0.30);
+  border-radius: 6px;
+}
+
+#previewModal.display, #previewModal .modalContent.display {
+  display: block;
+  border: 0 solid rgba(0,0,0,0.20);
+  box-shadow: 0 2px 10px 0 rgba(0,0,0,0.30);
+  border-radius: 6px;
+}
+
+
+#seedModal .modalContent.display > p.seed {
+  font-weight: 600;
+  vertical-align: middle;
+  text-align: center;
+}
+
+#seedModal > .modalContent.display > button.buttonStyle {
+  width: 150px;
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+  color: #ffffff;
+  background: rgba(0,0,0,0.35);
+  border: 0.5px solid rgba(0,0,0,0.10);
+  border-radius: 4px;
+}
+
+
+#seedModal > .modalContent.display > button.buttonStyle:hover {
+  cursor: pointer;
+}
+
+#confirmSeed.inputStyle {
+  margin: 0 auto;
+  border-radius: 3px;
+  width: 98%; 
+  padding: 5px 8px;
+  position: relative;
+  border: 0.5px solid rgba(0,0,0,0.25);
+  border: 0.5px solid rgba(0,0,0,0.51);
+  border-radius: 4px;
+  background: #FFFFFF;
+  z-index: 1;
+  margin-bottom: 1vh;
+}
+
+button.close {
+  margin-bottom: 1vh;
+  position: fixed;
+  z-index: 1;
+  height: 13px;
+  width: 13px;
+  top: 36vh;
+  left: 75vw;
+  border: 0px;
+  background-image:  url('../images/close.png');
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+#seedModal .close:hover, #previewModal .close:hover {
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.30);
+}
+
+
+#previewModal.display > .modalContent > .wrapper  {
+  width: auto;
+  height: 50vh;
+  overflow-y: scroll !important;
+  background: #fff;
+}
+
+#previewModal.display > .modalContent > .wrapper > .agent {
+  background-image: url('../images/agent.png');
+  background-repeat: no-repeat;
+  width: auto;
+  height: 100vh;
+}
+#previewModal.display > .modalContent > .wrapper > .group {
+  background-image: url('../images/group.png');
+  background-repeat: no-repeat;
+  width: auto;
+  height: 100vh;
+}
+#previewModal.display > .modalContent > .wrapper > .DMswitch {
+  background-image: url('../images/switch.png');
+  background-repeat: no-repeat;
+  width: auto;
+  height: 100vh;
+}
+
+

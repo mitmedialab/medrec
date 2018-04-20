@@ -1,0 +1,334 @@
+#patientStyle {
+  margin: 0;
+  padding: 0;
+  top: 0;
+  left: 0;
+  position: absolute;
+  font-size: 1rem;
+  overflow-y: hidden;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  margin: 0;
+  padding: 0;
+  top: 0;
+  height: 100vh;
+  float: left;
+  border: 0 solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.17);
+}
+
+#patientStyle > .sidebar {
+  background: rgba(186,203,204,0.41) !important;
+  color: rgba(0,0,0,60) !important;
+}
+
+.sidebar > p {
+  margin: 0;
+  font-size: 1em;
+  line-height: 18px;
+  padding-left: 2.5vw;
+}
+
+.medrec-logo-patient {
+  width: 146px;
+  height: 80px;
+  position: relative;
+  margin: 0 auto;
+  display: block;
+  background-image: url('../../images/SidebarTitlePatient.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-bottom: 10vh;
+  margin-top: 10vh;
+}
+
+.sidebar > p > .status {
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-left: 1vw;
+}
+
+.sidebar .button-group {
+  padding-left: 2.5vw;
+  margin-top: 2vh;
+}
+
+button.buttonHome, button.buttonAbout, button.buttonRelationships {
+  margin-right: 0.5vw;
+  margin-bottom: 2vh;
+  width: 150px;
+  padding: 5px 8px;
+  position: relative;
+  display: inline-block;
+  background: #FFFFFF;
+  border: 0 solid rgba(0,0,0,0.10);
+  box-shadow: 0 0 1px 0 rgba(0,0,0,0.22);
+  border-radius: 3.5px;
+}
+
+
+/*------------------------MAIN PANEL------------------------*/
+
+.mainPanel {
+  /*border: 1px solid;*/
+  padding-top: 20vh;
+  padding-bottom: 20vh;
+  margin-left: 25.5vw;
+  height: 80vh;
+  width: 60vw;
+  overflow-y: scroll;
+  font-size: 1rem;
+}
+/*------------------------INPUT FIELDS------------------------*/
+
+.mainPanel .inputStyle {
+  margin-right: 0.5vw;
+  margin-bottom: 1vh;
+  border-radius: 3px;
+  width: 150px; 
+  padding: 5px 8px;
+  position: relative;
+  border: 0 solid rgba(0,0,0,0.25);
+  border: 0 solid rgba(0,0,0,0.51);
+  border-radius: 4px;
+  background: #FFFFFF;
+  z-index: 1;
+}
+
+.mainPanel .inputStyle::-webkit-input-placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle::-moz-placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle:-ms-input-placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle::placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle:focus {
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  background-color: rgba(255,255,255,0.9);
+  color: rgb(52, 66, 86);
+}
+
+.mainPanel > h1, h2, h3, h4 {
+  font-weight: 400;
+}
+
+/*------------------------BUTTONS------------------------*/
+
+button.buttonStyle {
+  width: 150px;
+  height: 21px;
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+  color: #ffffff;
+  background: rgba(0,0,0,0.35);
+  border: 0 solid rgba(0,0,0,0.10);
+  border-radius: 4px;
+}
+
+button.buttonStyle:hover {
+  background: rgba(0,0,0,0.55);
+  cursor: pointer;
+}
+
+/*------------------------TABLES------------------------*/
+
+table {
+  background: rgba(248,248,248,0.40);
+  border: 0 solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.17);
+  border-radius: 2px;
+  font-size: 1rem;
+}
+
+table.isHidden {
+  opacity: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+}
+
+table.isVisible {
+  opacity: 1;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+  font-size: 1rem;
+}
+
+table > thead {
+  background: rgba(0,0,0,0.05);
+  border-radius: 5px;
+  color: rgba(0,0,0,0.60);
+  line-height: 18px;
+  font-weight: 400;
+  font-size: 1rem;
+}
+
+td, tr{
+  padding-right: 2vw;
+  width: 20%;
+  font-size: 1rem;
+}
+
+/*------------------------SMART CONTRACT------------------------*/
+
+.relationshipsTable {
+  display: flex; 
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+}
+
+.relationshipsTable > .settingsColumn {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 0;
+  width: 18vw;
+  margin-right: 1vw;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+/*------------------------DEAD MAN SWITCH------------------------*/
+
+.relationshipsTable > .DMswitch  {
+  display: flex; 
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+}
+
+.relationshipsTable > .DMswitch > .settingsColumn {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  padding: 0;
+  width: 18vw;
+  margin-right: 2vw;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+.relationshipsTable > .DMswitch > .settingsColumn > button.DMbutton {
+  margin: 0 auto;
+  padding: 0;
+  margin-top: 3.4vh;
+  margin-bottom: 3vh;
+  width: 150px;
+  height: 21px;
+  color: #000;
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 4px;
+  box-shadow: 0 0 1px 0 rgba(0,0,0,0.22);
+}
+
+/*------------------------TABS FOR CONTRACT COLUMNS------------------------*/
+
+.tab {
+  display: flex; 
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: 0.5vh 0.2vw;
+  margin: 0;
+  border-left: 4px solid rgba(0,0,0,0.);
+}
+
+.tab:hover {
+  background: rgba(248,248,248,0.50);
+}
+
+.tab > span {
+  overflow-y: scroll;
+  width: auto;
+  padding: 0 0.2vw;
+}
+
+.tab > span > input:hover {
+  cursor: pointer;
+}
+
+.settingsColumn > .header, .settingsColumn > .content,  .settingsColumn > .edit {
+  height: auto;
+  margin: 2vh 0;
+}
+
+.settingsColumn > .content {
+  height: 20vh;
+  overflow-x: scroll;
+}
+
+
+.header > p {
+  background: rgba(0,0,0,0.05);
+  border-radius: 5px;
+  color: rgba(0,0,0,0.60);
+  line-height: 20px;
+  font-weight: 600;
+  padding-left: 0.1vw;
+  text-align: center;
+}
+
+
+.edit {
+  text-align: left;
+  background: rgba(0,0,0,0.05);
+  height: 23vh !important;
+  text-align: center;
+  padding-bottom: 2vh;
+  border-radius: 4px;
+}
+
+.edit > p {
+  color: rgba(0,0,0,0.60);
+  border-radius: 4px;
+  line-height: 20px;
+  font-weight: 600;
+  margin: 2vh 0 1vh 0;
+  padding: 0;
+}
+
+.edit > form > label  {
+  /*border: 1px solid;*/
+  position: relative;
+  display: block;
+  margin: 1vh;
+}
+
+input#providerAccount, input#providerName, input#viewerName, input#viewerAccount, input#permissionDuration, input#permissionName {
+  width: 140px;
+  border-radius: 3px;
+  padding: 5px 8px;
+  position: relative;
+  border: 1px solid rgba(0,0,0,0.25);
+  border-radius: 4px;
+  background: #FFFFFF;
+  z-index: 1;
+  height: 10px;
+  margin: 0.5vh;
+}
+
+input#permissionDuration {
+  width: 10px;
+}

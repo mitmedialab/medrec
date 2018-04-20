@@ -1,0 +1,266 @@
+#providerStyle {
+  margin: 0;
+  padding: 0;
+  top: 0;
+  left: 0;
+  position: absolute;
+  font-size: 1rem;
+  height: 100vh;
+  overflow-y: hidden;
+}
+
+.sidebar {
+  width: 220px;
+  margin: 0;
+  padding: 0;
+  top: 0;
+  height: 100vh;
+  float: left;
+  border: 0 solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.17);
+}
+
+#providerStyle > .sidebar {
+  color: rgba(0,0,0,60) !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.sidebar > p {
+  margin: 0;
+  font-size: 1em;
+  line-height: 18px;
+  padding-left: 2.5vw;
+}
+
+.medrec-logo-provider {
+  width: 146px;
+  height: 80px;
+  position: relative;
+  margin: 0 auto;
+  display: block;
+  background-image: url('../../images/SidebarTitleProvider.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-bottom: 10vh;
+  margin-top: 10vh;
+}
+
+.sidebar > p > .status {
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-left: 1vw;
+}
+
+.sidebar .button-group {
+  padding-left: 2.5vw;
+  margin-top: 2vh;
+}
+
+button.buttonHome, button.buttonList, button.buttonEdit {
+  margin-right: 0.5vw;
+  margin-bottom: 2vh;
+  width: 150px;
+  padding: 5px 8px;
+  position: relative;
+  display: inline-block;
+  background: #FFFFFF;
+  border: 0 solid rgba(0,0,0,0.10);
+  box-shadow: 0 0 1px 0 rgba(0,0,0,0.22);
+  border-radius: 3.5px;
+}
+
+
+/*------------------------MAIN PANEL------------------------*/
+
+.mainPanel {
+  /*border: 1px solid;*/
+  padding-top: 20vh;
+  padding-bottom: 20vh;
+  margin-left: 25.5vw;
+  height: 80vh;
+  width: 70vw;
+  overflow-y: scroll;
+  font-size: 1rem;
+}
+
+#signersList {
+  line-height: 2;
+} 
+
+#signersList > div > span {
+  padding-right: 0 2vw;
+}
+/*------------------------INPUT FIELDS------------------------*/
+
+.mainPanel .inputStyle {
+  margin-right: 0.5vw;
+  margin-bottom: 1vh;
+  border-radius: 3px;
+  width: 150px; 
+  padding: 5px 8px;
+  position: relative;
+  border: 0 solid rgba(0,0,0,0.25);
+  border: 0 solid rgba(0,0,0,0.51);
+  border-radius: 4px;
+  background: #FFFFFF;
+  z-index: 1;
+}
+
+.mainPanel .inputStyle::-webkit-input-placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle::-moz-placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle:-ms-input-placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle::placeholder {
+  color: #ccc;
+}
+
+.mainPanel .inputStyle:focus {
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  background-color: rgba(255,255,255,0.9);
+  color: rgb(52, 66, 86);
+}
+
+.mainPanel > h1, h2, h3, h4 {
+  font-weight: 400;
+}
+
+/*------------------------BUTTONS------------------------*/
+
+button.buttonStyle {
+  width: 150px;
+  height: 21px;
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+  color: #ffffff;
+  background: rgba(0,0,0,0.35);
+  border: 0 solid rgba(0,0,0,0.10);
+  border-radius: 4px;
+}
+
+button.buttonStyle:hover {
+  background: rgba(0,0,0,0.55);
+  cursor: pointer;
+}
+
+/*------------------------TABLES------------------------*/
+
+table {
+  background: rgba(248,248,248,0.40);
+  border: 0 solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.17);
+  border-radius: 2px;
+}
+
+table.isHidden {
+  opacity: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+}
+
+table.isVisible {
+  opacity: 1;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+}
+
+table > thead {
+  background: rgba(0,0,0,0.05);
+  border-radius: 5px;
+  color: rgba(0,0,0,0.60);
+  
+  line-height: 18px;
+  font-weight: 400;
+}
+
+td, tr{
+  padding-right: 2vw;
+  width: 20%;
+}
+
+.settingsColumn {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+.tab {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+/*------------------------Input------------------------*/
+
+.settingsColumn > .visualization {
+  height: 215px;
+  width: 320px;
+  background: url('../../images/visualization.png');
+  background-position: right;
+  background-repeat: no-repeat;
+  /*border: 1px solid;*/
+  width: 15vw;
+}
+
+.settingsColumn > .Create, .settingsColumn > .Groups, .settingsColumn > .Add {
+  margin: 1vh 0;
+  width: 40vw;
+  line-height: 2;
+  /*border: 1px solid;*/
+}
+
+.Create > p, .Groups > p, .Add > p {
+  background: rgba(0,0,0,0.05);
+  border-radius: 5px;
+  color: rgba(0,0,0,0.60);
+  
+  line-height: 20px;
+  font-weight: 600;
+  padding-left: 0.1vw;
+}
+
+
+input#proposalName, input#kickAddress {
+  margin: 0 0.3vw;
+  border-radius: 3px;
+  width: 150px; 
+  padding: 5px 8px;
+  position: relative;
+  border: 1px solid rgba(0,0,0,0.25);
+  border-radius: 4px;
+  background: #FFFFFF;
+  z-index: 1;
+  height: 10px;
+}
+
+.settingsColumn > button.buttonStyle {
+  width: 150px;
+  height: 21px;
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+  color: #ffffff;
+  background: rgba(0,0,0,0.35);
+  border: 0 solid rgba(0,0,0,0.10);
+  border-radius: 4px;
+  line-height: 20px;
+}
+
+.settingsColumn > button.buttonStyle:hover {
+  background: rgba(0,0,0,0.55);
+  cursor: pointer;
+}

@@ -1,0 +1,9 @@
+
+svg {
+	/*border: 1px solid;*/
+    transform-origin: 0px 0px 0px;
+}
+
+svg > text {
+	font-weight: 600;
+}
