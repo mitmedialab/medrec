@@ -4,7 +4,7 @@
   "private": true,
   "author": "Viral Media",
   "homepage": "./",
-  "main": "src/electron-starter.js",
+  "main": "electron-starter.js",
   "dependencies": {
     "babel-core": "6.26.0",
     "babel-eslint": "7.2.3",

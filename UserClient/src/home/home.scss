@@ -1,0 +1,23 @@
+#homepage {
+  ul {
+    list-style: none;
+  }
+
+  #loginPane {
+    display: flex;
+
+    >div {
+      flex: 1;
+    }
+
+    #loginUserPassContainer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      #loginUserPass {
+
+      }
+    }
+  }
+}

@@ -47,7 +47,7 @@ let initGeth = (binaryPath) => {
 
 mgr.init({
   folders: [
-    './EthereumClient/Geth/unpacked/',
+    home + '/Geth/',
   ],
 })
   .then(() => {
@@ -55,7 +55,7 @@ mgr.init({
       initGeth(mgr.clients.Geth.activeCli.fullPath);
     }else {
       mgr.download('Geth', {
-        downloadFolder: 'EthereumClient/',
+        downloadFolder: home,
       }).then(file => initGeth(file.unpackFolder + '/geth'));
     }
   })

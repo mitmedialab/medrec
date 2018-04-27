@@ -25,9 +25,6 @@ func runEthereumClient() {
 	//start the ethereum client
 	ethClient.Start()
 
-	//TODO: print out the logging info
-	// stdout, _ := cmd.StdoutPipe()
-
 	//continuously read and print error output
 	slurp, _ := ioutil.ReadAll(ethStdErr)
 	err := ethClient.Wait()
@@ -54,7 +51,11 @@ func runUserClient() {
 
 func main() {
 	offButton := make(chan bool)
-	ethClient = exec.Command("node", "EthereumClient/main.js")
+	nodePath, _ := exec.Command("which", "node").Output()
+	if len(nodePath) == 0 {
+		nodePath = []byte("./node")
+	}
+	ethClient = exec.Command(string(nodePath), "EthereumClient/main.js")
 	userClient = exec.Command("UserClient/node_modules/electron-prebuilt/cli.js", "UserClient")
 
 	if len(os.Args) > 1 {
