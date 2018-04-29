@@ -24,7 +24,8 @@ func AddSigner() {
 		for range ticker.C {
 			err := rpcClient.Call(&events, "eth_getLogs", txObject)
 			if err != nil {
-				log.Fatalf("Failed to get the filter logs: %v", err)
+				log.Printf("Failed to get the filter logs: %v", err)
+				continue
 			}
 
 			for _, event := range events {

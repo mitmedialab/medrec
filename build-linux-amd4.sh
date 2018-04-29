@@ -18,8 +18,12 @@ cp EthereumClient/clientBinaries.json build/EthereumClient/
 cp -r EthereumClient/node_modules build/EthereumClient/
 
 #build the UserClient
-# (cd UserClient && npm run build)
+(cd UserClient && npm run build)
 mkdir build/UserClient
 cp -r UserClient/build build/UserClient
 cp UserClient/electron-starter.js build/UserClient
-cp UserClient/node_modules/electron-prebuilt/cli.js build/UserClient/electron
+d="UserClient/node_modules/"
+mkdir -p "build/$d" && cp -r "$d/electron-prebuilt/" "build/$d/electron-prebuilt/"
+
+
+tar -zcvf medrec-amd64.tar.gz build

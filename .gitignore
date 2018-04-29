@@ -8,6 +8,7 @@ node_modules
 
 # production
 /build
+/*.tar.gz
 
 # misc
 .DS_Store

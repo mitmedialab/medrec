@@ -30,6 +30,7 @@ func runEthereumClient() {
 	err := ethClient.Wait()
 	if err != nil {
 		log.Print("Ethereum client Exited")
+		log.Println(err)
 		log.Print(string(slurp))
 	}
 	offButton <- true
@@ -51,12 +52,8 @@ func runUserClient() {
 
 func main() {
 	offButton := make(chan bool)
-	nodePath, _ := exec.Command("which", "node").Output()
-	if len(nodePath) == 0 {
-		nodePath = []byte("./node")
-	}
-	ethClient = exec.Command(string(nodePath), "EthereumClient/main.js")
-	userClient = exec.Command("UserClient/node_modules/electron-prebuilt/cli.js", "UserClient")
+	ethClient = exec.Command("./node", "EthereumClient/main.js")
+	userClient = exec.Command("UserClient/node_modules/electron-prebuilt/cli.js", "UserClient/electron-starter.js")
 
 	if len(os.Args) > 1 {
 		if os.Args[1] == "DatabaseManager" {
