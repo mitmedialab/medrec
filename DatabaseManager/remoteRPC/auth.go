@@ -1,50 +1,84 @@
 package remoteRPC
 
+//TODO require that the authentication messsage is within a more stringent time domain
+//such as between 0 and 5 minutes, additionally should requre that time signatures
+//are monotonically increasing
+
 import (
-	"../params"
-	"database/sql"
-	"fmt"
 	"log"
+	"strconv"
+	"time"
+
+	"../ethereum"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type AuthArgs struct {
-	PatientID int
+type AuthPatientArgs struct {
+	UniqueID string
 }
 
-type AuthReply struct {
-	//restructure as a JSON string
-	Patients params.Patients
-	Error    string
-}
+// AuthenticateProvider verifies that the provided message was signed by a provider
+// message is current time in seconds formatted as a string
+// signature is the signature of the current time
+// returns the patient account
+func AuthenticatePatient(msg string, signature string) string {
+	//fail authentication if the msg is too old
+	msgInt, _ := strconv.ParseInt(msg, 10, 64)
+	elapsedTime := time.Now().Sub(time.Unix(msgInt, 0))
+	if elapsedTime.Minutes() > 10 {
+		return ""
+	}
 
-func (client *MedRecRemote) Authenticate(db *sql.DB, args *AuthArgs, reply *AuthReply) error {
+	tab := instantiateLookupTable()
+	defer tab.Close()
 
-	rows, err := db.Query(fmt.Sprintf("SELECT PatientID FROM patient_info WHERE PatientID = %d", 1))
+	messageSigner, _ := ECRecover(msg, signature)
+	messageSigner += "0x"
+	uid, err := tab.Get([]byte("uid"+messageSigner), nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
-	var (
-		PatientID int
-	)
-
-	for rows.Next() {
-		err = rows.Scan(&PatientID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		result := *new(params.Patient)
-
-		if err != nil {
-			log.Fatal(err)
-			reply.Error = err.Error()
-		}
-		result.PatientID = PatientID
-
-		reply.Patients = append(reply.Patients, result)
+	if len(uid) == 0 {
+		return messageSigner
 	}
 
-	return err
+	return ""
+}
+
+type AuthProviderArgs struct {
+	MsgHex    string
+	Signature string
+}
+
+// AuthenticateProvider verifies that the provided message was signed by a provider
+// message is current time in seconds formatted as a string
+// signature is the signature of the current time
+// returns provider account
+func AuthenticateProvider(msg string, signature string) string {
+	msgInt, _ := strconv.ParseInt(msg, 10, 64)
+	elapsedTime := time.Now().Sub(time.Unix(msgInt, 0))
+	if elapsedTime.Minutes() > 10 {
+		return ""
+	}
+
+	//create a connection over json rpc to the ethereum client
+	rpcClient, err := ethereum.GetEthereumRPCConn()
+
+	// get the current list of signers
+	var signers []string
+	err = rpcClient.Call(&signers, "clique_getSigners")
+	if err != nil {
+		log.Fatalf("Failed to get current signers list: %v", err)
+	}
+
+	messageSigner, _ := ECRecover(msg, signature)
+	messageSigner += "0x"
+	for _, signer := range signers {
+		if signer == messageSigner {
+			return messageSigner
+		}
+	}
+	return ""
 }

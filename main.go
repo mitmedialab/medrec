@@ -52,7 +52,7 @@ func runUserClient() {
 
 func main() {
 	offButton := make(chan bool)
-	ethClient = exec.Command("./node", "EthereumClient/main.js")
+	ethClient = exec.Command("./node", "GolangJSHelpers/startGeth.js")
 	userClient = exec.Command("UserClient/node_modules/electron-prebuilt/cli.js", "UserClient/electron-starter.js")
 
 	if len(os.Args) > 1 {

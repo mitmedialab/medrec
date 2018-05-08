@@ -1,3 +1,5 @@
+//go:generate abigen --sol ../../SmartContracts/contracts/AgentRegistry.sol --pkg ethereum --out AgentRegistry.go
+
 package ethereum
 
 import (
@@ -10,11 +12,11 @@ func Init() {
 	AddSigner()
 }
 
-func GetRPCConn() *rpc.Client {
+func GetEthereumRPCConn() (*rpc.Client, error) {
 	//create a connection over json rpc to the ethereum client
 	rpcClient, err := rpc.Dial("http://localhost:8545")
 	if err != nil {
 		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
 	}
-	return rpcClient
+	return rpcClient, err
 }

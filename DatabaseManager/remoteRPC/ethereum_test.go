@@ -1,46 +1,39 @@
 package remoteRPC
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
 	"log"
 	"strconv"
 	"testing"
-	"encoding/gob"
-	"encoding/hex"
-	"bytes"
+	"time"
 
-	"github.com/ethereum/go-ethereum/rpc"
+	"../ethereum"
 )
 
-func TestRecover(t *testing.T){
-	rpcClient, err := rpc.Dial("http://localhost:8545")
-	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
-	}
-
+func TestRecover(t *testing.T) {
 	recoverArgs := &RecoverArgs{
-		MsgHash: "0x7f6c0e5c497ded52462ec18daeb1c94cefa11cd6949ebdb7074b2a32cac13fba",
-      	Signature: "0xd4f70d60a000c5426e10f6e58caf02b7a5c21248dbc0dba47f179d97891a88d12d07d54c69edc24f34ae88722d275f7d198f5de0ffd8897e06979c9b3c36bb6200",
-    }
+		MsgHex:    "0xdeadbeef",
+		Signature: "0x5c707e85427d94de23e499b0742dd42f25629b8b33d8dfddee68b50fec59c8bd147354fbd6e66b4c135aaf922491ef4d87e427609e89c70e67c2860c60d7f45a1b",
+	}
 
 	type ecRecoverResult struct {
 		data []byte
 	}
 
-	var result map[string]interface{}
-	err = rpcClient.Call(&result, "eth_ecRecover", recoverArgs.MsgHash, recoverArgs.Signature)
-	if err != nil {
-		log.Fatalf("Failed to return ethereum address: %v", err)
-	}
+	result, _ := ECRecover(recoverArgs.MsgHex, recoverArgs.Signature)
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
-	enc.Encode(result["data"])
+	enc.Encode(result)
 
 	decodedResult := make([]byte, 20)
 	buf.Read(decodedResult)
 
-	log.Println(result["data"])
-	log.Println(buf.Len())
-	log.Println("0x" + hex.EncodeToString(decodedResult))
+	// log.Println(result)
+	// log.Println(buf.Len())
+	// log.Println("0x" + hex.EncodeToString(decodedResult))
+	// TODO figure out how to get the encoding into a result
 
 }
 
@@ -52,32 +45,32 @@ func TestFaucet(t *testing.T) {
 
 	faucetArgs := &FaucetArgs{
 		Account: "0x000f8fdee72ac11b5c542428b35eed5769c409f0",
+		Time:    fmt.Sprintf("%d", time.Now().Unix()),
 	}
+	faucetArgs.Signature, _ = Sign(faucetArgs.Time, faucetArgs.Account)
 
 	faucetReply := &FaucetReply{}
 
 	//create a connection over json rpc to the ethereum client
-	rpcClient, err := rpc.Dial("http://localhost:8545")
-	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
-	}
+	rpcClient, _ := ethereum.GetEthereumRPCConn()
 
 	// execute a ftransaction funding the user account with some ether
 	var balance string
-	err = rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account)
+	err := rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account, "latest")
 	if err != nil {
-		log.Fatalf("Failed to send transaction: %v", err)
+		log.Fatalf("Failed to get current eth balance: %v", err)
+
 	}
 	balance1, _ := strconv.ParseInt(balance[2:], 16, 64)
 
-	client.Faucet(nil, faucetArgs, faucetReply)
+	client.PatientFaucet(nil, faucetArgs, faucetReply)
 	if faucetReply.Error != "" {
 		t.Errorf("The Faucet threw an error: %s", faucetReply.Error)
 	}
 
-	err = rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account)
+	err = rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account, "latest")
 	if err != nil {
-		log.Fatalf("Failed to send transaction: %v", err)
+		log.Fatalf("Failed to get current eth balance: %v", err)
 	}
 	balance2, _ := strconv.ParseInt(balance[2:], 16, 64)
 	diff := balance2 - balance1

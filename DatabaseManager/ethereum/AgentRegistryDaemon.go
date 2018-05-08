@@ -11,7 +11,7 @@ func AddSigner() {
 	//sha3 hash of the "AddSigner(address)" event
 	const addSignerHash = "0x637c77a2d598a51d085d4a2413332c45a235a25ee855bf3dfcdc2c8fcf02860f"
 
-	rpcClient := GetRPCConn()
+	rpcClient, _ := GetEthereumRPCConn()
 
 	var events []map[string]interface{}
 	var lastBlockNumber int64

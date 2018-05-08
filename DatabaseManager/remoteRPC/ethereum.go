@@ -1,14 +1,23 @@
 package remoteRPC
 
 import (
-	"log"
-	"net/http"
-	"strconv"
+	"encoding/hex"
+	"errors"
 	"github.com/ethereum/go-ethereum/rpc"
+	"log"
+	"math/rand"
+	"net/http"
+	"os/exec"
+	"strconv"
+	"time"
+
+	"../ethereum"
 )
 
 type FaucetArgs struct {
-	Account string
+	Account   string // the provider account to provide the refund
+	Time      string // the current time
+	Signature string // signature of the current time
 }
 
 type FaucetReply struct {
@@ -17,45 +26,98 @@ type FaucetReply struct {
 }
 
 type RecoverArgs struct {
-	//MsgHash map[string]interface{}
-	MsgHex string
+	MsgHex    string
 	Signature string
 }
 
 type RecoverReply struct {
-	Msg []byte
-	Sender []byte
+	Account string
 }
 
 //recover takes a hashed message and returns the address of the sender
 func (client *MedRecRemote) Recover(r *http.Request, args *RecoverArgs, reply *RecoverReply) error {
+
+	log.Println("message is: " + args.MsgHex)
+	log.Println("signature is: " + args.Signature)
+
+	result, err := ECRecover(args.MsgHex, args.Signature)
+	reply.Account = result
+	return err
+}
+
+//recover takes a message and returns the address of the sender
+func ECRecover(msg string, signature string) (string, error) {
+	msgHex := "0x" + hex.EncodeToString([]byte(msg))
+
+	rpcClient, err := ethereum.GetEthereumRPCConn()
+
+	var result string
+	rpcClient.Call(&result, "personal_ecRecover", msgHex, signature)
+	return result, err
+}
+
+//Sign takes a hashed message and signs it
+func Sign(msg string, account string) (string, error) {
+	msgHex := hex.EncodeToString([]byte(msg))
 
 	rpcClient, err := rpc.Dial("http://localhost:8545")
 	if err != nil {
 		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
 	}
 
-
-	log.Println("message is: " + args.MsgHex)
-	log.Println("signature is: " + args.Signature)
-
-	type ecRecoverResult struct {
-		data []byte
-	}
-
-	//var result map[string]interface{}
 	var result string
-	err = rpcClient.Call(&result, "eth_ecRecover", args.MsgHex, args.Signature)
+	rpcClient.Call(&result, "personal_sign", msgHex, account)
+
+	return result, err
+}
+
+//PatientFaucet takes an ethereum account and gives it some ether
+//Message and Signature should be from the patient
+//Account should refer to the Provider's account that money should be sent from
+func (client *MedRecRemote) PatientFaucet(r *http.Request, args *FaucetArgs, reply *FaucetReply) error {
+	patientAddress := AuthenticatePatient(args.Time, args.Signature)
+	//create a connection over json rpc to the ethereum client
+	gethClient, _ := ethereum.GetEthereumRPCConn()
+
+	// get the current list of signers
+	var signers []string
+	err := gethClient.Call(&signers, "clique_getSigners", "latest")
 	if err != nil {
-		log.Fatalf("Failed to return ethereum address: %v", err)
+		log.Fatalf("Failed to get signers: %v", err)
+	}
+	rand.Seed(time.Now().Unix())
+	nextProvider := signers[rand.Intn(len(signers))]
+	//get the host info of the provider who should fufil the faucet request
+	//using a js helper script
+	host, _ := exec.Command("node getProviderHost.js" + nextProvider).CombinedOutput()
+	log.Println("nextprovider" + string(host))
+
+	// sign the current time
+	curTime := string(time.Now().Unix())
+	signature, err := Sign(curTime, args.Account)
+	if err != nil {
+		log.Fatalf("Failed to Sign: %v", err)
 	}
 
-	log.Println("return address is " + result)
+	nextArgs := &FaucetArgs{patientAddress, curTime, signature}
+	providerClient, err := rpc.Dial("http://" + string(host) + ":6337")
+	if err != nil {
+		log.Fatalf("Failed to connect to provider faucet at %s because: %v", host, err)
+	}
+	providerClient.Call(&reply, "MedRecRemote.ProviderFaucet", nextArgs)
+
 	return err
 }
 
-//Faucet takes an ethereum account and gives it some ether
-func (client *MedRecRemote) Faucet(r *http.Request, args *FaucetArgs, reply *FaucetReply) error {
+//ProviderFaucet takes an ethereum account and gives it some ether
+// The Message and Signature should be from the requesting provider
+// The Account should be of the patient to whom funds should be sent
+func (client *MedRecRemote) ProviderFaucet(r *http.Request, args *FaucetArgs, reply *FaucetReply) error {
+	providerAddress := AuthenticateProvider(args.Time, args.Signature)
+	if providerAddress == "" {
+		return errors.New("provider check failed")
+	}
+
 	//create a connection over json rpc to the ethereum client
 	rpcClient, err := rpc.Dial("http://localhost:8545")
 	if err != nil {

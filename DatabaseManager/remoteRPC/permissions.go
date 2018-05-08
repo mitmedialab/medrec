@@ -8,31 +8,6 @@ import (
 	"time"
 )
 
-//
-// type AccountArgs struct {
-// 	Account string
-// 	AgentID string
-// }
-//
-// type AccountReply struct {
-// 	Error string
-// }
-//
-//  func lookupPatient(address []byte) []byte {
-//
-//  	tab := instantiateLookupTable()
-// 	defer tab.Close()
-//
-// 	log.Println("instantiated, in lookup, address is", address)
-// 	data, err := tab.Get(address, nil)
-// 	if err != nil {
-// 		log.Println(err)
-// 	}
-//
-// 	log.Println(data)
-// 	return data
-//  }
-
 type AddPermissionArgs struct {
 	AgentID      string
 	ViewerGroup  string

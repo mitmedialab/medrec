@@ -7,18 +7,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type AccountArgs struct {
-	Account string
-	AgentID string
-}
+func lookupPatient(address []byte) []byte {
 
-type AccountReply struct {
-	Error string
-}
-
- func lookupPatient(address []byte) []byte {
-
- 	tab := instantiateLookupTable()
+	tab := instantiateLookupTable()
 	defer tab.Close()
 
 	log.Println("instantiated, in lookup, address is", address)
@@ -29,28 +20,42 @@ type AccountReply struct {
 
 	log.Println(data)
 	return data
- }
+}
+
+type AddAccountArgs struct {
+	Account  string
+	UniqueID string
+}
+
+type AddAccountReply struct {
+	Error string
+}
+
+func getUniqueID(account string) []byte {
+	tab := instantiateLookupTable()
+	defer tab.Close()
+
+	data, err := tab.Get([]byte("uid"+account), nil)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return data
+}
 
 //should add test to check that:
 //unique ID is not a duplicate
 //unique id matches an entry in the database
-func (client *MedRecRemote) AddAccount(r *http.Request, args *AccountArgs, reply *AccountReply) error{
-	log.Println("adding new patient account", args.AgentID, "     ", args.Account)
+func (client *MedRecRemote) AddAccount(r *http.Request, args *AddAccountArgs, reply *AddAccountReply) error {
+	log.Println("adding new patient account", args.UniqueID, "     ", args.Account)
 
- 	tab := instantiateLookupTable()
+	tab := instantiateLookupTable()
 	defer tab.Close()
 
-	err := tab.Put([]byte(args.Account), []byte(args.AgentID), nil)
+	err := tab.Put([]byte("uid-"+args.Account), []byte(args.UniqueID), nil)
 	if err != nil {
 		log.Println(err)
 	}
 
-	data, err := tab.Get([]byte(args.Account), nil)
-	if err != nil {
-		log.Println(err)
-	}
-
-	dataString := string(data[:])
-	log.Println("account created for patient: ", dataString)
 	return err
 }
