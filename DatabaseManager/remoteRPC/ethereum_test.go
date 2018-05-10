@@ -5,11 +5,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"log"
-	"strconv"
 	"testing"
 	"time"
-
-	"../ethereum"
 )
 
 func TestRecover(t *testing.T) {
@@ -42,39 +39,37 @@ func TestRecover(t *testing.T) {
 //  ganache-cli is recommended
 func TestFaucet(t *testing.T) {
 	client := new(MedRecRemote)
+	//create a connection over json rpc to the ethereum client
+	rpcClient, _ := GetEthereumRPCConn()
 
+	//get a local ethereum address which can be used for testing
+	var accounts []string
+	err := rpcClient.Call(&accounts, "eth_accounts")
+	if err != nil {
+		log.Fatalf("Failed to get an ethereum account: %v", err)
+	}
+
+	//make sure the patient exists in the database
+	addArgs := &AddAccountArgs{
+		Time:     fmt.Sprintf("%d", time.Now().Unix()),
+		UniqueID: accounts[0],
+	}
+	addArgs.Signature, _ = Sign(addArgs.Time, accounts[0])
+	addReply := &AddAccountReply{}
+	client.AddAccount(nil, addArgs, addReply)
+
+	//create the arguments to the call to the faucet
 	faucetArgs := &FaucetArgs{
-		Account: "0x000f8fdee72ac11b5c542428b35eed5769c409f0",
+		Account: accounts[1],
 		Time:    fmt.Sprintf("%d", time.Now().Unix()),
 	}
-	faucetArgs.Signature, _ = Sign(faucetArgs.Time, faucetArgs.Account)
+	faucetArgs.Signature, _ = Sign(faucetArgs.Time, accounts[0])
 
 	faucetReply := &FaucetReply{}
 
-	//create a connection over json rpc to the ethereum client
-	rpcClient, _ := ethereum.GetEthereumRPCConn()
-
-	// execute a ftransaction funding the user account with some ether
-	var balance string
-	err := rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account, "latest")
-	if err != nil {
-		log.Fatalf("Failed to get current eth balance: %v", err)
-
-	}
-	balance1, _ := strconv.ParseInt(balance[2:], 16, 64)
-
+	//request the faucent send some ether
 	client.PatientFaucet(nil, faucetArgs, faucetReply)
-	if faucetReply.Error != "" {
+	if faucetReply.Error != "" && faucetReply.Txid != "" {
 		t.Errorf("The Faucet threw an error: %s", faucetReply.Error)
-	}
-
-	err = rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account, "latest")
-	if err != nil {
-		log.Fatalf("Failed to get current eth balance: %v", err)
-	}
-	balance2, _ := strconv.ParseInt(balance[2:], 16, 64)
-	diff := balance2 - balance1
-	if diff != 9223372036854775807 {
-		t.Errorf("The faucet did not transfer 9223372036854775807 wei, actual: %d", diff)
 	}
 }

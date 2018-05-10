@@ -10,9 +10,9 @@ type Document struct {
 
 type Documents []Document
 
-type Patient struct{
-	PatientID 	 int  `json:"patientid"`
-	EthAddress 	 string `json:"ethaddress"`
+type Patient struct {
+	PatientID  int    `json:"patientid"`
+	EthAddress string `json:"ethaddress"`
 }
 
 type Patients []Patient

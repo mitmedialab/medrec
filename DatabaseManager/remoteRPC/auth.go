@@ -6,10 +6,9 @@ package remoteRPC
 
 import (
 	"log"
+	"net/http"
 	"strconv"
 	"time"
-
-	"../ethereum"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -34,13 +33,10 @@ func AuthenticatePatient(msg string, signature string) string {
 	defer tab.Close()
 
 	messageSigner, _ := ECRecover(msg, signature)
-	messageSigner += "0x"
-	uid, err := tab.Get([]byte("uid"+messageSigner), nil)
-	if err != nil {
-		log.Println(err)
-	}
 
-	if len(uid) == 0 {
+	_, err := tab.Get([]byte("uid-"+messageSigner), nil)
+
+	if err == nil {
 		return messageSigner
 	}
 
@@ -64,21 +60,76 @@ func AuthenticateProvider(msg string, signature string) string {
 	}
 
 	//create a connection over json rpc to the ethereum client
-	rpcClient, err := ethereum.GetEthereumRPCConn()
+	rpcClient, err := GetEthereumRPCConn()
 
 	// get the current list of signers
 	var signers []string
-	err = rpcClient.Call(&signers, "clique_getSigners")
+	err = rpcClient.Call(&signers, "clique_getSigners", "latest")
 	if err != nil {
 		log.Fatalf("Failed to get current signers list: %v", err)
 	}
-
+	log.Printf("signers list: %v\n", signers)
 	messageSigner, _ := ECRecover(msg, signature)
-	messageSigner += "0x"
+	log.Println("message sign" + msg + " " + messageSigner)
 	for _, signer := range signers {
 		if signer == messageSigner {
 			return messageSigner
 		}
 	}
 	return ""
+}
+
+func lookupPatient(address []byte) []byte {
+
+	tab := instantiateLookupTable()
+	defer tab.Close()
+
+	log.Println("instantiated, in lookup, address is", address)
+	data, err := tab.Get(address, nil)
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(data)
+	return data
+}
+
+type AddAccountArgs struct {
+	Account   string
+	Time      string
+	Signature string
+	UniqueID  string
+}
+
+type AddAccountReply struct {
+	Error string
+}
+
+func getUniqueID(account string) []byte {
+	tab := instantiateLookupTable()
+	defer tab.Close()
+
+	data, err := tab.Get([]byte("uid"+account), nil)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return data
+}
+
+//should add test to check that:
+//unique ID is not a duplicate
+//unique id matches an entry in the database
+func (client *MedRecRemote) AddAccount(r *http.Request, args *AddAccountArgs, reply *AddAccountReply) error {
+	patientAddress, _ := ECRecover(args.Time, args.Signature)
+
+	tab := instantiateLookupTable()
+	defer tab.Close()
+
+	err := tab.Put([]byte("uid-"+patientAddress), []byte(args.UniqueID), nil)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return err
 }

@@ -8,5 +8,5 @@ let providerAcc = process.argv[2] || '0x0';
 AgentRegistry.deployed()
   .then(agentRegistry => agentRegistry.getAgentHost(providerAcc))
   .then(host => {
-    console.log(host);
+    process.stdout.write(host);
   });
