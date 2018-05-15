@@ -82,16 +82,6 @@ func GetMedRecRemoteRPCConn() (*rpc.Client, error) {
 	return rpcClient, err
 }
 
-//recover takes a hashed message and returns the address of the sender
-func (client *MedRecRemote) Recover(r *http.Request, args *RecoverArgs, reply *RecoverReply) error {
-	log.Println("message is: " + args.Time)
-	log.Println("signature is: " + args.Signature)
-
-	result, err := ECRecover(args.Time, args.Signature)
-	reply.Account = result
-	return err
-}
-
 //recover takes a message and returns the address of the sender
 func ECRecover(msg string, signature string) (string, error) {
 	msgHex := "0x" + hex.EncodeToString([]byte(msg))
@@ -139,10 +129,9 @@ func (client *MedRecRemote) SetWalletPassword(r *http.Request, args *SetWalletPa
 //Message and Signature should be from the patient
 //Account should refer to the Provider's account that money should be sent from
 func (client *MedRecRemote) PatientFaucet(r *http.Request, args *FaucetArgs, reply *FaucetReply) error {
-	patientAddress := AuthenticatePatient(args.Time, args.Signature)
-	if patientAddress == "" {
-		//TODO test, I don't think the code ever goes to this case
-		return errors.New("patient does not exist for this provider")
+	patientAddress, err := AuthenticatePatient(args.Time, args.Signature)
+	if err != nil {
+		return err
 	}
 
 	// sign the current time
@@ -162,10 +151,9 @@ func (client *MedRecRemote) PatientFaucet(r *http.Request, args *FaucetArgs, rep
 // The Message and Signature should be from the requesting provider
 // The Account should be of the patient to whom funds should be sent
 func (client *MedRecRemote) ProviderFaucet(r *http.Request, args *FaucetArgs, reply *FaucetReply) error {
-	providerAddress := AuthenticateProvider(args.Time, args.Signature)
-	//TODO check that this actually gets called
-	if providerAddress == "" {
-		return errors.New("provider check failed")
+	_, err := AuthenticateProvider(args.Time, args.Signature)
+	if err != nil {
+		return err
 	}
 
 	//create a connection over json rpc to the ethereum client
@@ -173,7 +161,7 @@ func (client *MedRecRemote) ProviderFaucet(r *http.Request, args *FaucetArgs, re
 
 	//get the list of accounts open on the client
 	var accounts []string
-	err := rpcClient.Call(&accounts, "eth_accounts")
+	err = rpcClient.Call(&accounts, "eth_accounts")
 	if err != nil {
 		log.Fatalf("Failed to get the ethereum accounts: %v", err)
 	}

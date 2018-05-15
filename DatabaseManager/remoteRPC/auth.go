@@ -18,12 +18,12 @@ import (
 // message is current time in seconds formatted as a string
 // signature is the signature of the current time
 // returns the patient account
-func AuthenticatePatient(msg string, signature string) string {
+func AuthenticatePatient(msg string, signature string) (string, error) {
 	//fail authentication if the msg is too old
 	msgInt, _ := strconv.ParseInt(msg, 10, 64)
 	elapsedTime := time.Now().Sub(time.Unix(msgInt, 0))
 	if elapsedTime.Minutes() > 10 {
-		return ""
+		return "", errors.New("signature is too old")
 	}
 
 	tab := instantiateLookupTable()
@@ -34,21 +34,21 @@ func AuthenticatePatient(msg string, signature string) string {
 	_, err := tab.Get([]byte("uid-"+messageSigner), nil)
 
 	if err == nil {
-		return messageSigner
+		return messageSigner, nil
 	}
 
-	return ""
+	return "", errors.New("account could not be found")
 }
 
 // AuthenticateProvider verifies that the provided message was signed by a provider
 // message is current time in seconds formatted as a string
 // signature is the signature of the current time
 // returns provider account
-func AuthenticateProvider(msg string, signature string) string {
+func AuthenticateProvider(msg string, signature string) (string, error) {
 	msgInt, _ := strconv.ParseInt(msg, 10, 64)
 	elapsedTime := time.Now().Sub(time.Unix(msgInt, 0))
 	if elapsedTime.Minutes() > 10 {
-		return ""
+		return "", errors.New("signature is too old")
 	}
 
 	//create a connection over json rpc to the ethereum client
@@ -65,10 +65,10 @@ func AuthenticateProvider(msg string, signature string) string {
 	log.Println("message sign" + msg + " " + messageSigner)
 	for _, signer := range signers {
 		if signer == messageSigner {
-			return messageSigner
+			return messageSigner, nil
 		}
 	}
-	return ""
+	return "", errors.New("account is not a provider")
 }
 
 func lookupPatient(address []byte) []byte {
@@ -113,13 +113,15 @@ func getUniqueID(account string) []byte {
 //unique ID is not a duplicate
 //unique id matches an entry in the database
 func (client *MedRecRemote) AddAccount(r *http.Request, args *AddAccountArgs, reply *AddAccountReply) error {
-	//TODO return an error if the recover returns an empty address
-	patientAddress, _ := ECRecover(args.Time, args.Signature)
+	patientAddress, err := ECRecover(args.Time, args.Signature)
+	if err != nil {
+		return err
+	}
 
 	tab := instantiateLookupTable()
 	defer tab.Close()
 
-	err := tab.Put([]byte("uid-"+patientAddress), []byte(args.UniqueID), nil)
+	err = tab.Put([]byte("uid-"+patientAddress), []byte(args.UniqueID), nil)
 	if err != nil {
 		log.Println(err)
 	}
@@ -138,10 +140,9 @@ type AgentContractReply struct {
 }
 
 func (client *MedRecRemote) PatientAgentContract(r *http.Request, args *AgentContractArgs, reply *AgentContractReply) error {
-	patientAddress := AuthenticatePatient(args.Time, args.Signature)
-	if patientAddress == "" {
-		//TODO test, I don't think the code ever goes to this case
-		return errors.New("patient does not exist for this provider")
+	_, err := AuthenticatePatient(args.Time, args.Signature)
+	if err != nil {
+		return err
 	}
 	//TODO check if the user already has an agent contract associated with them}
 
@@ -170,10 +171,9 @@ func (client *MedRecRemote) PatientAgentContract(r *http.Request, args *AgentCon
 }
 
 func (client *MedRecRemote) ProviderAgentContract(r *http.Request, args *AgentContractArgs, reply *AgentContractReply) error {
-	providerAddress := AuthenticateProvider(args.Time, args.Signature)
-	if providerAddress == "" {
-		//TODO test, I don't think the code ever goes to this case
-		return errors.New("request was not sent by a provider")
+	_, err := AuthenticateProvider(args.Time, args.Signature)
+	if err != nil {
+		return err
 	}
 
 	//create the agent contract and set it's owner using a helper script

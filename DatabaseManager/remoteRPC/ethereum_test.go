@@ -1,8 +1,6 @@
 package remoteRPC
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"log"
 	"testing"
@@ -10,9 +8,10 @@ import (
 )
 
 func TestRecover(t *testing.T) {
+	signerAccount := "0xc5b2fe6f6bc85d71f4ae9a335896c9308ec8977c"
 	recoverArgs := &RecoverArgs{
-		Time:      "0xdeadbeef",
-		Signature: "0x5c707e85427d94de23e499b0742dd42f25629b8b33d8dfddee68b50fec59c8bd147354fbd6e66b4c135aaf922491ef4d87e427609e89c70e67c2860c60d7f45a1b",
+		Time:      "1526422718",
+		Signature: "0xe27f440e8520bd9ea447505a3ff42f5220e29f285ac542806aff78ab66f8a95f03d3c5edb809c0b39e4233a3dc2ce71bf6ba61e0783e8abafce8d7fdd815bb711c",
 	}
 
 	type ecRecoverResult struct {
@@ -20,17 +19,10 @@ func TestRecover(t *testing.T) {
 	}
 
 	result, _ := ECRecover(recoverArgs.Time, recoverArgs.Signature)
-	buf := bytes.NewBuffer(nil)
-	enc := gob.NewEncoder(buf)
-	enc.Encode(result)
 
-	decodedResult := make([]byte, 20)
-	buf.Read(decodedResult)
-
-	// log.Println(result)
-	// log.Println(buf.Len())
-	// log.Println("0x" + hex.EncodeToString(decodedResult))
-	// TODO figure out how to get the encoding into a result
+	if result != signerAccount {
+		t.Errorf("ECRecover failed")
+	}
 
 }
 
