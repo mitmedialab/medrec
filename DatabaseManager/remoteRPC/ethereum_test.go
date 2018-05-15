@@ -11,7 +11,7 @@ import (
 
 func TestRecover(t *testing.T) {
 	recoverArgs := &RecoverArgs{
-		MsgHex:    "0xdeadbeef",
+		Time:      "0xdeadbeef",
 		Signature: "0x5c707e85427d94de23e499b0742dd42f25629b8b33d8dfddee68b50fec59c8bd147354fbd6e66b4c135aaf922491ef4d87e427609e89c70e67c2860c60d7f45a1b",
 	}
 
@@ -19,7 +19,7 @@ func TestRecover(t *testing.T) {
 		data []byte
 	}
 
-	result, _ := ECRecover(recoverArgs.MsgHex, recoverArgs.Signature)
+	result, _ := ECRecover(recoverArgs.Time, recoverArgs.Signature)
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
 	enc.Encode(result)

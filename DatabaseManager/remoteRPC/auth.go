@@ -5,17 +5,14 @@ package remoteRPC
 //are monotonically increasing
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
 )
-
-type AuthPatientArgs struct {
-	UniqueID string
-}
 
 // AuthenticateProvider verifies that the provided message was signed by a provider
 // message is current time in seconds formatted as a string
@@ -41,11 +38,6 @@ func AuthenticatePatient(msg string, signature string) string {
 	}
 
 	return ""
-}
-
-type AuthProviderArgs struct {
-	MsgHex    string
-	Signature string
 }
 
 // AuthenticateProvider verifies that the provided message was signed by a provider
@@ -121,6 +113,7 @@ func getUniqueID(account string) []byte {
 //unique ID is not a duplicate
 //unique id matches an entry in the database
 func (client *MedRecRemote) AddAccount(r *http.Request, args *AddAccountArgs, reply *AddAccountReply) error {
+	//TODO return an error if the recover returns an empty address
 	patientAddress, _ := ECRecover(args.Time, args.Signature)
 
 	tab := instantiateLookupTable()
@@ -132,4 +125,63 @@ func (client *MedRecRemote) AddAccount(r *http.Request, args *AddAccountArgs, re
 	}
 
 	return err
+}
+
+type AgentContractArgs struct {
+	Account   string //the acctount that should be set as the owner of the new AgentContract
+	Time      string //unix time encoded into a hex string
+	Signature string //signature of the time
+}
+
+type AgentContractReply struct {
+	ContractAddress string
+}
+
+func (client *MedRecRemote) PatientAgentContract(r *http.Request, args *AgentContractArgs, reply *AgentContractReply) error {
+	patientAddress := AuthenticatePatient(args.Time, args.Signature)
+	if patientAddress == "" {
+		//TODO test, I don't think the code ever goes to this case
+		return errors.New("patient does not exist for this provider")
+	}
+	//TODO check if the user already has an agent contract associated with them}
+
+	// sign the current time
+	curTime := fmt.Sprintf("%d", time.Now().Unix())
+	signature, err := Sign(curTime, args.Account)
+	if err != nil {
+		log.Fatalf("Failed to Sign: %v", err)
+	}
+
+	newAccount, err := exec.Command("node", "../../GolangJSHelpers/generateNewAccount.js", WalletPassword).CombinedOutput()
+	if err != nil {
+		log.Fatalf("Failed to update the Agent Registry: %v", err)
+	}
+
+	nextArgs := &AgentContractArgs{string(newAccount), curTime, signature}
+	rpcClient, _ := GetMedRecRemoteRPCConn()
+	rpcClient.Call(&reply, "MedRecRemote.ProviderAgentContract", nextArgs)
+
+	_, err = exec.Command("node", "../../GolangJSHelpers/addAgentToRegistry.js", reply.ContractAddress).CombinedOutput()
+	if err != nil {
+		log.Fatalf("Failed to update the Agent Registry: %v", err)
+	}
+
+	return err
+}
+
+func (client *MedRecRemote) ProviderAgentContract(r *http.Request, args *AgentContractArgs, reply *AgentContractReply) error {
+	providerAddress := AuthenticateProvider(args.Time, args.Signature)
+	if providerAddress == "" {
+		//TODO test, I don't think the code ever goes to this case
+		return errors.New("request was not sent by a provider")
+	}
+
+	//create the agent contract and set it's owner using a helper script
+	contractAddr, err := exec.Command("node", "../../GolangJSHelpers/makeNewAgent.js", args.Account).CombinedOutput()
+	if err != nil {
+		log.Fatalf("Failed to generate a new AgentContract %s for: %v", contractAddr, err)
+	}
+	reply.ContractAddress = string(contractAddr)
+
+	return nil
 }

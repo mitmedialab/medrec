@@ -1,4 +1,5 @@
 import Promise from 'bluebird';
+import Ethereum from './Ethereum';
 
 let requestNonce = 0;
 
@@ -16,24 +17,32 @@ class RPCClient {
     return client;
   }
   send (method, ...args) {
-
     return new Promise((resolve, reject) => {
       let id = requestNonce++;
 
       var headers = new Headers();
       headers.append('Content-Type', 'application/json');
 
-      fetch(this.rpcAddress, {
-        method: 'POST',
-        body: JSON.stringify({'method': method, 'params': args, 'id': id}),
-        headers: headers,
-      }).then(res => res.json())
-        .then((data) => {
-          if(data.error !== null) {
-            reject(data.error);
-          }else {
-            resolve(data.result);
-          }
+      //sign the message with the current time before sending
+      args.Time = (new Date).getTime();
+      Ethereum.web3.eth.getAccounts()
+        .then(accounts => {
+          return  Ethereum.web3.eth.sign(args.Time, web3.eth);
+        }).then(sig => {
+          args.Signature = sig;
+
+          fetch(this.rpcAddress, {
+            method: 'POST',
+            body: JSON.stringify({'method': method, 'params': args, 'id': id}),
+            headers: headers,
+          }).then(res => res.json())
+            .then((data) => {
+              if(data.error !== null) {
+                reject(data.error);
+              }else {
+                resolve(data.result);
+              }
+            });
         });
     });
   }

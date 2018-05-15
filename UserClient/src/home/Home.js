@@ -78,6 +78,11 @@ class Home extends Component {
   createAgent (event) {
     event.preventDefault();
     Ethereum.generateVault(this.state.password)
+      .then(() => {
+        return RPCClient.remote('127.0.0.1').send('MedRecRemote.SetWalletPassword', {
+          WalletPassword: this.state.password,
+        });
+      })
       .then(() => Ethereum.getSeed(this.state.password))
       .then((seed) => {
         //shows seed to user
