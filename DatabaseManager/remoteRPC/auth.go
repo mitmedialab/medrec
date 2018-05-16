@@ -5,6 +5,7 @@ package remoteRPC
 //are monotonically increasing
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -51,18 +52,16 @@ func AuthenticateProvider(msg string, signature string) (string, error) {
 		return "", errors.New("signature is too old")
 	}
 
-	//create a connection over json rpc to the ethereum client
-	rpcClient, err := GetEthereumRPCConn()
-
 	// get the current list of signers
 	var signers []string
-	err = rpcClient.Call(&signers, "clique_getSigners", "latest")
+	result, err := exec.Command("node", "./GolangJSHelpers/getSigners.js").CombinedOutput()
 	if err != nil {
 		log.Fatalf("Failed to get current signers list: %v", err)
 	}
-	log.Printf("signers list: %v\n", signers)
+
+	json.Unmarshal(result, &signers)
+
 	messageSigner, _ := ECRecover(msg, signature)
-	log.Println("message sign" + msg + " " + messageSigner)
 	for _, signer := range signers {
 		if signer == messageSigner {
 			return messageSigner, nil
@@ -153,7 +152,7 @@ func (client *MedRecRemote) PatientAgentContract(r *http.Request, args *AgentCon
 		log.Fatalf("Failed to Sign: %v", err)
 	}
 
-	newAccount, err := exec.Command("node", "../../GolangJSHelpers/generateNewAccount.js", WalletPassword).CombinedOutput()
+	newAccount, err := exec.Command("node", "./GolangJSHelpers/generateNewAccount.js", WalletPassword).CombinedOutput()
 	if err != nil {
 		log.Fatalf("Failed to update the Agent Registry: %v", err)
 	}
@@ -162,7 +161,7 @@ func (client *MedRecRemote) PatientAgentContract(r *http.Request, args *AgentCon
 	rpcClient, _ := GetMedRecRemoteRPCConn()
 	rpcClient.Call(&reply, "MedRecRemote.ProviderAgentContract", nextArgs)
 
-	_, err = exec.Command("node", "../../GolangJSHelpers/addAgentToRegistry.js", reply.ContractAddress).CombinedOutput()
+	_, err = exec.Command("node", "./GolangJSHelpers/addAgentToRegistry.js", reply.ContractAddress).CombinedOutput()
 	if err != nil {
 		log.Fatalf("Failed to update the Agent Registry: %v", err)
 	}
@@ -177,7 +176,7 @@ func (client *MedRecRemote) ProviderAgentContract(r *http.Request, args *AgentCo
 	}
 
 	//create the agent contract and set it's owner using a helper script
-	contractAddr, err := exec.Command("node", "../../GolangJSHelpers/makeNewAgent.js", args.Account).CombinedOutput()
+	contractAddr, err := exec.Command("node", "./GolangJSHelpers/makeNewAgent.js", args.Account).CombinedOutput()
 	if err != nil {
 		log.Fatalf("Failed to generate a new AgentContract %s for: %v", contractAddr, err)
 	}

@@ -19,7 +19,7 @@ import {store} from './reduxStore';
 class Ethereum {
   constructor () {
     this.engine = new ProviderEngine();
-    this.web3 = new Web3(this.engine);
+    this.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
     //this.utils = new Utils();
     this.pendingTransactions = [];
     this.addWeb3Commands();
@@ -36,7 +36,13 @@ class Ethereum {
 
     //the value stores access to privateKeys and addresses
     this.vault = null;
-    this.waitForVault = new Promise((resolve, reject) => {
+
+    //saves the user password so they don't have to enter it for every transaction
+    this.pwDerivedKey = null;
+  }
+
+  waitForVault () {
+    return new Promise((resolve, reject) => {
       let check = () => {
         if(this.vault) {
           resolve(this.vault);
@@ -46,9 +52,22 @@ class Ethereum {
       };
       check();
     });
+  }
 
-    //saves the user password so they don't have to enter it for every transaction
-    this.pwDerivedKey = null;
+  waitForRPCConn () {
+    return new Promise((resolve, reject) => {
+      let timer;
+      let check = () => {
+        this.web3.eth.net.isListening().then(listening => {
+          if(listening) {
+            clearTimeout(timer);
+            resolve();
+          }
+        }).catch(() => {});
+      };
+      timer = setInterval(check, 2000);
+      check();
+    });
   }
 
   //add some non standard web3 commands to the web3 api
@@ -124,7 +143,6 @@ class Ethereum {
       },
       signMessage: (options, cb) => {
         this.getVault().then(vault => {
-          console.log('current vault', options, this.pwDerivedKey);
           var secretKey = vault.exportPrivateKey(options.from, this.pwDerivedKey);
           var msg = new Buffer(options.data.replace('0x', ''), 'hex');
 
@@ -161,10 +179,6 @@ class Ethereum {
 
     //log new blocks
     this.engine.on('block', (block) => {
-      console.log('================================');
-      console.log('BLOCK CHANGED:', '#' + block.number.toString('hex'), '0x' +
-      block.hash.toString('hex'));
-      console.log('================================');
       let newPendTrans = [];
       this.pendingTransactions.forEach(txObj => {
         this.web3.eth.getTransactionReceipt(txObj.txid).then(receipt => {
@@ -184,9 +198,11 @@ class Ethereum {
       console.error(err.stack);
     });
 
-    //start polling for blocks
-    //with all of the components, now we can start the engine
-    this.engine.start();
+    //wait for the ethereum client to be connected, then start polling for blocks
+    this.waitForRPCConn().then(() => {
+      this.web3 = new Web3(this.engine);
+      this.engine.start();
+    });
   }
 
   //gets the current user's account
@@ -271,9 +287,11 @@ class Ethereum {
           this.vault = vault;
 
           //reset the waitForVault function so it takes the new vault value
-          this.waitForVault = new Promise((vaultResolve) => {
-            vaultResolve(this.vault);
-          });
+          //this.waitForVault = new Promise((vaultResolve) => {
+          //vaultResolve(this.vault);
+          //});
+          //TODO: make sure the above isn't needed any more
+
           this.pwDerivedKey = pwDerivedKey;
           resolve(vault);
         });
@@ -284,7 +302,7 @@ class Ethereum {
   //get the vault
   getVault () {
     return new Promise((resolve, reject) => {
-      this.waitForVault.then(resolve);
+      this.waitForVault().then(resolve);
     });
   }
 

@@ -1,7 +1,6 @@
 package localRPC
 
 import (
-	"../params"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -10,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"../common"
 
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"golang.org/x/crypto/scrypt"
@@ -21,7 +22,7 @@ type GetUsernamesReply struct {
 }
 
 // GetUsernames queries the sql databse for the list of local users
-func (client *MedRecLocal) GetUsernames(r *http.Request, args *params.NoArgs, reply *GetUsernamesReply) error {
+func (client *MedRecLocal) GetUsernames(r *http.Request, args *common.NoArgs, reply *GetUsernamesReply) error {
 	tab := instantiateLookupTable()
 	defer tab.Close()
 

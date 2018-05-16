@@ -1,11 +1,11 @@
 package remoteRPC
 
 import (
-	"../params"
 	"fmt"
 	"log"
 	"net/http"
 
+	"../common"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -15,8 +15,8 @@ type PatientDocumentsArgs struct {
 
 type PatientDocumentsReply struct {
 	//restructure as a JSON string
-	Documents params.Documents
-	Error string
+	Documents common.Documents
+	Error     string
 }
 
 //returns a pointer to an sql database.
@@ -40,10 +40,10 @@ func (client *MedRecRemote) PatientDocuments(r *http.Request, args *PatientDocum
 	defer rows.Close()
 
 	var (
-		PatientID   string
-		DocumentID int
-		DocDateTime string
-		PracticeID string
+		PatientID     string
+		DocumentID    int
+		DocDateTime   string
+		PracticeID    string
 		RecvdDateTime string
 	)
 	for rows.Next() {
@@ -51,8 +51,8 @@ func (client *MedRecRemote) PatientDocuments(r *http.Request, args *PatientDocum
 		if err != nil {
 			log.Fatal(err)
 		}
-		result := *new(params.Document)
- 
+		result := *new(common.Document)
+
 		if err != nil {
 			log.Fatal(err)
 			reply.Error = err.Error()

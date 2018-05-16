@@ -3,6 +3,7 @@ package remoteRPC
 import (
 	"fmt"
 	"log"
+	"os"
 	"testing"
 	"time"
 )
@@ -23,13 +24,14 @@ func TestRecover(t *testing.T) {
 	if result != signerAccount {
 		t.Errorf("ECRecover failed")
 	}
-
 }
 
 // TestFaucet requires an ethereum client to be running locally
 //  with rpc enabled on port 8545,
 //  ganache-cli is recommended
 func TestFaucet(t *testing.T) {
+	os.Chdir("../../")
+
 	client := new(MedRecRemote)
 	//create a connection over json rpc to the ethereum client
 	rpcClient, _ := GetEthereumRPCConn()
@@ -60,8 +62,11 @@ func TestFaucet(t *testing.T) {
 	faucetReply := &FaucetReply{}
 
 	//request the faucent send some ether
-	client.PatientFaucet(nil, faucetArgs, faucetReply)
+	err = client.PatientFaucet(nil, faucetArgs, faucetReply)
 	if faucetReply.Error != "" && faucetReply.Txid != "" {
 		t.Errorf("The Faucet threw an error: %s", faucetReply.Error)
+	}
+	if err != nil {
+		t.Errorf("Faucet failed with error: %v", err)
 	}
 }

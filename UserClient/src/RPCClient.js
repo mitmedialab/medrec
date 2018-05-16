@@ -27,7 +27,7 @@ class RPCClient {
       args.Time = (new Date).getTime();
       Ethereum.web3.eth.getAccounts()
         .then(accounts => {
-          return  Ethereum.web3.eth.sign(args.Time, web3.eth);
+          return  Ethereum.web3.eth.sign(args.Time, accounts[0]);
         }).then(sig => {
           args.Signature = sig;
 

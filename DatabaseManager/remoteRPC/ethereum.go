@@ -69,7 +69,7 @@ func GetMedRecRemoteRPCConn() (*rpc.Client, error) {
 	nextProvider := signers[rand.Intn(len(signers))]
 	//get the host info of the provider who should fufil the faucet request
 	//using a js helper script
-	host, err := exec.Command("node", "../../GolangJSHelpers/getProviderHost.js", nextProvider).CombinedOutput()
+	host, err := exec.Command("node", "./GolangJSHelpers/getProviderHost.js", nextProvider).CombinedOutput()
 	if err != nil {
 		log.Fatalf("Failed to get the next provider's hostname: %v", err)
 	}
