@@ -1,8 +1,6 @@
 package remoteRPC
 
 import (
-	"encoding/hex"
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -11,53 +9,14 @@ import (
 	"strconv"
 	"time"
 
+	"../common"
 	"github.com/ethereum/go-ethereum/rpc"
 )
-
-type SetWalletPasswordArgs struct {
-	Time           string // the current time
-	Signature      string // signature of the current time
-	WalletPassword string //wallet password
-}
-
-type SetWalletPasswordReply struct {
-}
-
-type FaucetArgs struct {
-	Account   string // the provider account to provide the refund
-	Time      string // the current time
-	Signature string // signature of the current time
-}
-
-type FaucetReply struct {
-	Error string
-	Txid  string
-}
-
-type RecoverArgs struct {
-	Time      string
-	Signature string
-}
-
-type RecoverReply struct {
-	Account string
-}
-
-var WalletPassword string
-
-func GetEthereumRPCConn() (*rpc.Client, error) {
-	//create a connection over json rpc to the ethereum client
-	rpcClient, err := rpc.Dial("http://localhost:8545")
-	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
-	}
-	return rpcClient, err
-}
 
 // GetMedRecRemoteRPCConn returns a connection to a random provider
 func GetMedRecRemoteRPCConn() (*rpc.Client, error) {
 	//create a connection over json rpc to the ethereum client
-	gethClient, _ := GetEthereumRPCConn()
+	gethClient, _ := common.GetEthereumRPCConn()
 
 	// get the current list of signers
 	var signers []string
@@ -82,47 +41,15 @@ func GetMedRecRemoteRPCConn() (*rpc.Client, error) {
 	return rpcClient, err
 }
 
-//recover takes a message and returns the address of the sender
-func ECRecover(msg string, signature string) (string, error) {
-	msgHex := "0x" + hex.EncodeToString([]byte(msg))
-	rpcClient, _ := GetEthereumRPCConn()
-
-	var result string
-	err := rpcClient.Call(&result, "personal_ecRecover", msgHex, signature)
-	return result, err
+type FaucetArgs struct {
+	Account   string // the provider account to provide the refund
+	Time      string // the current time
+	Signature string // signature of the current time
 }
 
-//Sign takes a hashed message and signs it
-func Sign(msg string, account string) (string, error) {
-	msgHex := "0x" + hex.EncodeToString([]byte(msg))
-
-	rpcClient, _ := GetEthereumRPCConn()
-
-	var result string
-	err := rpcClient.Call(&result, "personal_sign", msgHex, account, "")
-	return result, err
-}
-
-func (client *MedRecRemote) SetWalletPassword(r *http.Request, args *SetWalletPasswordArgs, reply *SetWalletPasswordReply) error {
-	recoveredAccount, _ := ECRecover(args.Time, args.Signature)
-
-	//create a connection over json rpc to the ethereum client
-	rpcClient, _ := GetEthereumRPCConn()
-
-	//get the list of accounts open on the client
-	var accounts []string
-	err := rpcClient.Call(&accounts, "eth_accounts")
-	if err != nil {
-		log.Fatalf("Failed to get the ethereum accounts: %v", err)
-	}
-
-	if recoveredAccount == accounts[0] {
-		WalletPassword = args.WalletPassword
-	} else {
-		return errors.New("failed to set wallet password")
-	}
-
-	return nil
+type FaucetReply struct {
+	Error string
+	Txid  string
 }
 
 //PatientFaucet takes an ethereum account and gives it some ether
@@ -136,14 +63,14 @@ func (client *MedRecRemote) PatientFaucet(r *http.Request, args *FaucetArgs, rep
 
 	// sign the current time
 	curTime := fmt.Sprintf("%d", time.Now().Unix())
-	signature, err := Sign(curTime, args.Account)
+	signature, err := common.Sign(curTime, args.Account)
 	if err != nil {
 		log.Fatalf("Failed to Sign: %v", err)
 	}
 
 	nextArgs := &FaucetArgs{patientAddress, curTime, signature}
 	rpcClient, _ := GetMedRecRemoteRPCConn()
-	rpcClient.Call(&reply, "MedRecRemote.ProviderFaucet", nextArgs)
+	err = rpcClient.Call(&reply, "MedRecRemote.ProviderFaucet", nextArgs)
 	return err
 }
 
@@ -151,13 +78,15 @@ func (client *MedRecRemote) PatientFaucet(r *http.Request, args *FaucetArgs, rep
 // The Message and Signature should be from the requesting provider
 // The Account should be of the patient to whom funds should be sent
 func (client *MedRecRemote) ProviderFaucet(r *http.Request, args *FaucetArgs, reply *FaucetReply) error {
+	log.Printf("provider faucet: %v", args)
 	_, err := AuthenticateProvider(args.Time, args.Signature)
 	if err != nil {
+		log.Printf("there was auth error: %v", err)
 		return err
 	}
 
 	//create a connection over json rpc to the ethereum client
-	rpcClient, _ := GetEthereumRPCConn()
+	rpcClient, _ := common.GetEthereumRPCConn()
 
 	//get the list of accounts open on the client
 	var accounts []string
@@ -178,5 +107,5 @@ func (client *MedRecRemote) ProviderFaucet(r *http.Request, args *FaucetArgs, re
 	//reply with the transaction id
 	reply.Txid = txid
 
-	return nil
+	return err
 }

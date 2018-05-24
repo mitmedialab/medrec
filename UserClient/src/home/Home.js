@@ -18,7 +18,6 @@ class Home extends Component {
       lname: '',
       username: '',
       password: '',
-      agentID: '',
       seed: '',
       mode: 'patient',
       switched: false,
@@ -28,7 +27,6 @@ class Home extends Component {
       enablePreviewModal: false,
       confirmSeed: '',
       confirmSeedError: '',
-      sponsor: '',
       contract: 'agent',
       preview: 'agent',
     };
@@ -79,7 +77,7 @@ class Home extends Component {
     event.preventDefault();
     Ethereum.generateVault(this.state.password)
       .then(() => {
-        return RPCClient.remote('127.0.0.1').send('MedRecRemote.SetWalletPassword', {
+        return RPCClient.send('MedRecLocal.SetWalletPassword', {
           WalletPassword: this.state.password,
         });
       })
@@ -136,6 +134,7 @@ class Home extends Component {
 
     let agentRegContract;
     let accounts;
+    let host;
     RPCClient.send('MedRecLocal.NewUser', {
       FirstName: this.state.fname,
       LastName: this.state.lname,
@@ -147,56 +146,15 @@ class Home extends Component {
       if(res.Error !== '') {
         throw (res.Error);
       }
-      return Ethereum.getAgentRegistry();
-    }).then(reg => reg.deployed())
-      .then(_regContract => {
-        agentRegContract = _regContract;
-        //get the current set of ethereum account
-        return Ethereum.web3.eth.getAccounts();
-      }).then(_acc => {
-        accounts = _acc;
-        //instantiate the account and UID in the key/val store
-
-        RPCClient.remote('127.0.0.1').send('MedRecRemote.AddAccount', {
-          Account: accounts[0],
-          AgentID: this.state.agentID,
-        });
-        return agentRegContract.getAgentHost(this.state.sponsor);
-      }).then(host => {
-        //send a message to the faucet to fund the new account
-        return RPCClient.remote(host).send('MedRecRemote.Faucet', {Account: accounts[0]});
-      })
-      .then(faucetRes => {
-        //wait for the funding transaction to go through
-        return Ethereum.waitForTx(faucetRes.Txid);
-      })
-      .then( () => {
-        //create a new agent contract for the user
-        return Ethereum.getAgent();
-      })
-      .then(agent => agent.new())
-      .then((agentContract) => {
-        //register the agent contract in the agent registry
-        return agentRegContract.setAgentContractAddr(agentContract.address);
-      })
-      .then(txResult => {
-        //wait for the registry tx to finish
-        return Ethereum.waitForTx(txResult.tx);
-      })
-      .then(() => {
-        console.log('Agent created and registered');
-        console.log(this.state.contract);
-        this.setState({
-          enableModal: false,
-          enableConfirmModal: false,
-          fname: '',
-          lname: '',
-          username: '',
-          password: '',
-          sponsor: '',
-          agentID: '',
-        });
+      this.setState({
+        enableModal: false,
+        enableConfirmModal: false,
+        fname: '',
+        lname: '',
+        username: '',
+        password: '',
       });
+    });
   }
 
   login () {
@@ -267,10 +225,6 @@ class Home extends Component {
             <div id={identityStyle}>
               <h3>Create an Identity using the contract</h3>
               <form onSubmit={this.createAgent}>
-                <input className="inputStyle" id="sponsor" placeholder="sponsor's account" onChange={this.changeFieldById} value={this.state.sponsor}/>
-                <br/>
-                <input className="inputStyle" id="agentID" placeholder="unique ID" onChange={this.changeFieldById} value={this.state.agentID}/>
-                <br/>
                 <input className="inputStyle" id="fname" placeholder="First name" onChange={this.changeFieldById} value={this.state.fname}/>
                 <br/>
                 <input className="inputStyle" id="lname" placeholder="Last name" onChange={this.changeFieldById} value={this.state.lname}/>

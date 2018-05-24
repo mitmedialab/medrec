@@ -397,7 +397,6 @@ class Relationships extends Component {
           .then(agentContract => agentContract.at(agentAddress));
       }).then(_agent => {
         agent = _agent;
-        window.agent = _agent;
         return agentRegistry.getAgentHost(this.state.providerAccount);
       })
       .then(host => RPCClient.remote(host)

@@ -2,15 +2,16 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 //returns a pointer to an sql database.
 func main() {
 	//doesn't open db, but prepares abstraction
 	db, err := sql.Open("mysql",
-		"root:wordoflip1@tcp(127.0.0.1:3306)/medrec-v1")
+		"root:medrecpassword@tcp(127.0.0.1:3306)/medrec-v1")
 	if err != nil {
 		log.Fatal(err)
 	}

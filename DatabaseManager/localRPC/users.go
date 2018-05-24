@@ -16,6 +16,38 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+type SetWalletPasswordArgs struct {
+	Time           string // the current time
+	Signature      string // signature of the current time
+	WalletPassword string //wallet password
+}
+
+type SetWalletPasswordReply struct {
+}
+
+func (client *MedRecLocal) SetWalletPassword(r *http.Request, args *SetWalletPasswordArgs, reply *SetWalletPasswordReply) error {
+	// recoveredAccount, _ := common.ECRecover(args.Time, args.Signature)
+	//
+	// //create a connection over json rpc to the ethereum client
+	// rpcClient, _ := common.GetEthereumRPCConn()
+	//
+	// //get the list of accounts open on the client
+	// var accounts []string
+	// err := rpcClient.Call(&accounts, "eth_accounts")
+	// if err != nil {
+	// 	log.Fatalf("Failed to get the ethereum accounts: %v", err)
+	// }
+	//
+	// if recoveredAccount == accounts[0] {
+	// } else {
+	// 	return errors.New("failed to set wallet password")
+	// }
+
+	common.WalletPassword = args.WalletPassword
+
+	return nil
+}
+
 type GetUsernamesReply struct {
 	Usernames []string
 	Passwords []string
@@ -23,7 +55,7 @@ type GetUsernamesReply struct {
 
 // GetUsernames queries the sql databse for the list of local users
 func (client *MedRecLocal) GetUsernames(r *http.Request, args *common.NoArgs, reply *GetUsernamesReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	rows := tab.NewIterator(util.BytesPrefix([]byte("username-")), nil)
@@ -48,7 +80,7 @@ type GetUserDetailsReply struct {
 
 // GetUserDetails queries the sql databse for the list of local users
 func (client *MedRecLocal) GetUserDetails(r *http.Request, args *UserDetailsArgs, reply *GetUserDetailsReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	firstName, _ := tab.Get([]byte(args.Username+"-firstName"), nil)
@@ -74,7 +106,7 @@ type NewUserReply struct {
 
 // NewUser adds a new user to the database
 func (client *MedRecLocal) NewUser(r *http.Request, args *NewUserArgs, reply *NewUserReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	salt := make([]byte, ScryptSaltBytes)
@@ -144,7 +176,7 @@ type GetSeedReply struct {
 
 // GetSeed ecrypts and retrives a user's private key seed
 func (client *MedRecLocal) GetSeed(r *http.Request, args *GetSeedArgs, reply *GetSeedReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	storedPassword, _ := tab.Get([]byte(args.Username+"-password"), nil)
@@ -206,7 +238,7 @@ type DeleteUserReply struct {
 
 // DeleteUser retrieves a user's decrypts and retrives a user's private key
 func (client *MedRecLocal) DeleteUser(r *http.Request, args *DeleteUserArgs, reply *DeleteUserReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	storedPassword, _ := tab.Get([]byte(args.Username+"-password"), nil)
@@ -234,6 +266,30 @@ func (client *MedRecLocal) DeleteUser(r *http.Request, args *DeleteUserArgs, rep
 	tab.Delete([]byte(args.Username+"-lastName"), nil)
 	tab.Delete([]byte(args.Username+"-password"), nil)
 	tab.Delete([]byte(args.Username+"-privateKey"), nil)
+
+	return nil
+}
+
+type AddAccountArgs struct {
+	UniqueID string
+	Account  string
+}
+
+type AddAccountReply struct {
+}
+
+//should add test to check that:
+//unique ID is not a duplicate
+//unique id matches an entry in the database
+func (client *MedRecLocal) AddAccount(r *http.Request, args *AddAccountArgs, reply *AddAccountReply) error {
+	tab := common.InstantiateLookupTable()
+	defer tab.Close()
+
+	err := tab.Put([]byte(strings.ToLower("uid-"+args.Account)), []byte(args.UniqueID), nil)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	return nil
 }

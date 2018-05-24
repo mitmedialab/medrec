@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"../common"
 )
 
 type AddPermissionArgs struct {
@@ -23,7 +25,7 @@ type AddPermissionReply struct {
 func (client *MedRecRemote) AddPermission(r *http.Request, args *AddPermissionArgs, reply *AddPermissionReply) error {
 	log.Println("adding new permission" + args.ViewerGroup + " " + args.Name)
 
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	rawPerms, err := tab.Get([]byte("perm-list-"+args.AgentID+"-"+args.ViewerGroup), nil)
@@ -53,7 +55,7 @@ type RemovePermissionReply struct {
 }
 
 func (client *MedRecRemote) RemovePermission(r *http.Request, args *RemovePermissionArgs, reply *RemovePermissionReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	rawPerms, err := tab.Get([]byte("perm-list-"+args.AgentID+"-"+args.ViewerGroup), nil)
@@ -70,14 +72,14 @@ func (client *MedRecRemote) RemovePermission(r *http.Request, args *RemovePermis
 }
 
 func (client *MedRecRemote) SetPermissionDuration(r *http.Request, args *AddPermissionArgs, reply *AddPermissionReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 	err := tab.Put([]byte("perm-durationDays-"+args.AgentID+"-"+args.ViewerGroup+"-"+args.Name), []byte(strconv.FormatInt(args.DurationDays, 10)), nil)
 	return err
 }
 
 func (client *MedRecRemote) SetPermissionStartTime(r *http.Request, args *AddPermissionArgs, reply *AddPermissionReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 	err := tab.Put([]byte("perm-startTime-"+args.AgentID+"-"+args.ViewerGroup+"-"+args.Name), []byte(strconv.FormatInt(args.StartTime, 10)), nil)
 	return err
@@ -100,7 +102,7 @@ type GetPermissionsReply struct {
 }
 
 func (client *MedRecRemote) GetPermissions(r *http.Request, args *GetPermissionsArgs, reply *GetPermissionsReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	rawPerms, _ := tab.Get([]byte("perm-list-"+args.AgentID+"-"+args.ViewerGroup), nil)
@@ -131,7 +133,7 @@ type CheckPermissionReply struct {
 
 //utility function for checking the access permissions of a particular viewer
 func (client *MedRecRemote) CheckPermission(r *http.Request, args *CheckPermissionArgs, reply *CheckPermissionReply) error {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	rawPerms, err := tab.Get([]byte("perm-list-"+args.AgentID+"-"+args.ViewerGroup), nil)

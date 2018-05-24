@@ -16,7 +16,8 @@ class RPCClient {
     client.rpcAddress = 'http://' + host + ':' + this.port + '/remoteRPC';
     return client;
   }
-  send (method, ...args) {
+  send (method, args) {
+    args = args || {};
     return new Promise((resolve, reject) => {
       let id = requestNonce++;
 
@@ -24,16 +25,15 @@ class RPCClient {
       headers.append('Content-Type', 'application/json');
 
       //sign the message with the current time before sending
-      args.Time = (new Date).getTime();
+      args.Time = '' + (new Date).getTime();
       Ethereum.web3.eth.getAccounts()
         .then(accounts => {
           return  Ethereum.web3.eth.sign(args.Time, accounts[0]);
         }).then(sig => {
           args.Signature = sig;
-
           fetch(this.rpcAddress, {
             method: 'POST',
-            body: JSON.stringify({'method': method, 'params': args, 'id': id}),
+            body: JSON.stringify({'method': method, 'params': [args], 'id': id}),
             headers: headers,
           }).then(res => res.json())
             .then((data) => {

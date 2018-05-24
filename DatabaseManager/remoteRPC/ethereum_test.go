@@ -6,9 +6,18 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"../common"
+	"../localRPC"
 )
 
 func TestRecover(t *testing.T) {
+
+	type RecoverArgs struct {
+		Time      string
+		Signature string
+	}
+
 	signerAccount := "0xc5b2fe6f6bc85d71f4ae9a335896c9308ec8977c"
 	recoverArgs := &RecoverArgs{
 		Time:      "1526422718",
@@ -19,7 +28,7 @@ func TestRecover(t *testing.T) {
 		data []byte
 	}
 
-	result, _ := ECRecover(recoverArgs.Time, recoverArgs.Signature)
+	result, _ := common.ECRecover(recoverArgs.Time, recoverArgs.Signature)
 
 	if result != signerAccount {
 		t.Errorf("ECRecover failed")
@@ -32,9 +41,10 @@ func TestRecover(t *testing.T) {
 func TestFaucet(t *testing.T) {
 	os.Chdir("../../")
 
-	client := new(MedRecRemote)
+	localClient := new(localRPC.MedRecLocal)
+	remoteClient := new(MedRecRemote)
 	//create a connection over json rpc to the ethereum client
-	rpcClient, _ := GetEthereumRPCConn()
+	rpcClient, _ := common.GetEthereumRPCConn()
 
 	//get a local ethereum address which can be used for testing
 	var accounts []string
@@ -44,25 +54,23 @@ func TestFaucet(t *testing.T) {
 	}
 
 	//make sure the patient exists in the database
-	addArgs := &AddAccountArgs{
-		Time:     fmt.Sprintf("%d", time.Now().Unix()),
+	addArgs := &localRPC.AddAccountArgs{
 		UniqueID: accounts[0],
 	}
-	addArgs.Signature, _ = Sign(addArgs.Time, accounts[0])
-	addReply := &AddAccountReply{}
-	client.AddAccount(nil, addArgs, addReply)
+	addReply := &localRPC.AddAccountReply{}
+	localClient.AddAccount(nil, addArgs, addReply)
 
 	//create the arguments to the call to the faucet
 	faucetArgs := &FaucetArgs{
 		Account: accounts[1],
 		Time:    fmt.Sprintf("%d", time.Now().Unix()),
 	}
-	faucetArgs.Signature, _ = Sign(faucetArgs.Time, accounts[0])
+	faucetArgs.Signature, _ = common.Sign(faucetArgs.Time, accounts[0])
 
 	faucetReply := &FaucetReply{}
 
 	//request the faucent send some ether
-	err = client.PatientFaucet(nil, faucetArgs, faucetReply)
+	err = remoteClient.PatientFaucet(nil, faucetArgs, faucetReply)
 	if faucetReply.Error != "" && faucetReply.Txid != "" {
 		t.Errorf("The Faucet threw an error: %s", faucetReply.Error)
 	}

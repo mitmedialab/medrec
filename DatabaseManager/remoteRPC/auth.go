@@ -13,6 +13,8 @@ import (
 	"os/exec"
 	"strconv"
 	"time"
+
+	"../common"
 )
 
 // AuthenticateProvider verifies that the provided message was signed by a provider
@@ -27,18 +29,18 @@ func AuthenticatePatient(msg string, signature string) (string, error) {
 		return "", errors.New("signature is too old")
 	}
 
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
-	messageSigner, _ := ECRecover(msg, signature)
+	messageSigner, _ := common.ECRecover(msg, signature)
 
-	_, err := tab.Get([]byte("uid-"+messageSigner), nil)
+	ret, _ := tab.Has([]byte("uid-"+messageSigner), nil)
 
-	if err == nil {
+	if ret {
 		return messageSigner, nil
 	}
 
-	return "", errors.New("account could not be found")
+	return "", errors.New("account " + messageSigner + " could not be found")
 }
 
 // AuthenticateProvider verifies that the provided message was signed by a provider
@@ -61,7 +63,8 @@ func AuthenticateProvider(msg string, signature string) (string, error) {
 
 	json.Unmarshal(result, &signers)
 
-	messageSigner, _ := ECRecover(msg, signature)
+	messageSigner, _ := common.ECRecover(msg, signature)
+	log.Print(signers)
 	for _, signer := range signers {
 		if signer == messageSigner {
 			return messageSigner, nil
@@ -72,7 +75,7 @@ func AuthenticateProvider(msg string, signature string) (string, error) {
 
 func lookupPatient(address []byte) []byte {
 
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	log.Println("instantiated, in lookup, address is", address)
@@ -85,19 +88,8 @@ func lookupPatient(address []byte) []byte {
 	return data
 }
 
-type AddAccountArgs struct {
-	Account   string
-	Time      string
-	Signature string
-	UniqueID  string
-}
-
-type AddAccountReply struct {
-	Error string
-}
-
 func getUniqueID(account string) []byte {
-	tab := instantiateLookupTable()
+	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
 	data, err := tab.Get([]byte("uid"+account), nil)
@@ -106,26 +98,6 @@ func getUniqueID(account string) []byte {
 	}
 
 	return data
-}
-
-//should add test to check that:
-//unique ID is not a duplicate
-//unique id matches an entry in the database
-func (client *MedRecRemote) AddAccount(r *http.Request, args *AddAccountArgs, reply *AddAccountReply) error {
-	patientAddress, err := ECRecover(args.Time, args.Signature)
-	if err != nil {
-		return err
-	}
-
-	tab := instantiateLookupTable()
-	defer tab.Close()
-
-	err = tab.Put([]byte("uid-"+patientAddress), []byte(args.UniqueID), nil)
-	if err != nil {
-		log.Println(err)
-	}
-
-	return err
 }
 
 type AgentContractArgs struct {
@@ -147,12 +119,12 @@ func (client *MedRecRemote) PatientAgentContract(r *http.Request, args *AgentCon
 
 	// sign the current time
 	curTime := fmt.Sprintf("%d", time.Now().Unix())
-	signature, err := Sign(curTime, args.Account)
+	signature, err := common.Sign(curTime, args.Account)
 	if err != nil {
 		log.Fatalf("Failed to Sign: %v", err)
 	}
 
-	newAccount, err := exec.Command("node", "./GolangJSHelpers/generateNewAccount.js", WalletPassword).CombinedOutput()
+	newAccount, err := exec.Command("node", "./GolangJSHelpers/generateNewAccount.js", common.WalletPassword).CombinedOutput()
 	if err != nil {
 		log.Fatalf("Failed to update the Agent Registry: %v", err)
 	}

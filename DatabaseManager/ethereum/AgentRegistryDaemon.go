@@ -37,7 +37,7 @@ func AddSigner() {
 
 				err = rpcClient.Call(&events, "clique_propose", newSigner, true)
 				if err != nil {
-					log.Printf("Non fatal err when proposing new signer to the clique, liquely due to using ganache-cli")
+					log.Printf("Non fatal err when proposing new signer to the clique, likely due to using ganache-cli")
 				}
 
 				if blockNumber > lastBlockNumber {
