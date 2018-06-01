@@ -6,8 +6,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 	"strings"
 
 	"../common"
@@ -273,6 +275,8 @@ func (client *MedRecLocal) DeleteUser(r *http.Request, args *DeleteUserArgs, rep
 type AddAccountArgs struct {
 	UniqueID string
 	Account  string
+	Username string
+	Password string
 }
 
 type AddAccountReply struct {
@@ -282,14 +286,109 @@ type AddAccountReply struct {
 //unique ID is not a duplicate
 //unique id matches an entry in the database
 func (client *MedRecLocal) AddAccount(r *http.Request, args *AddAccountArgs, reply *AddAccountReply) error {
+
 	tab := common.InstantiateLookupTable()
 	defer tab.Close()
 
-	err := tab.Put([]byte(strings.ToLower("uid-"+args.Account)), []byte(args.UniqueID), nil)
+	err := tab.Put([]byte(strings.ToLower("patient-uid-"+args.Account)), []byte(args.UniqueID), nil)
 	if err != nil {
-		log.Println(err)
+		return err
+	}
+
+	newAccount, err := exec.Command("node", "./GolangJSHelpers/generateNewAccount.js", common.GetKeystorePath(args.Username), args.Password).CombinedOutput()
+	if err != nil {
+		log.Fatalf("Failed to generate a new account for this patient: %v", err)
+	}
+
+	err = tab.Put([]byte(strings.ToLower("patient-provider-account"+args.Account)), []byte(newAccount), nil)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
+type SaveKeystoreArgs struct {
+	Keystore string
+	Username string
+}
+
+type SaveKeystoreReply struct {
+}
+
+func (client *MedRecLocal) SaveKeystore(r *http.Request, args *SaveKeystoreArgs, reply *SaveKeystoreReply) error {
+	tab := common.InstantiateLookupTable()
+	defer tab.Close()
+
+	path := common.GetKeystorePath(args.Username)
+	err := ioutil.WriteFile(path, []byte(args.Keystore), 0644)
+	return err
+}
+
+type GetKeystoreArgs struct {
+	Username string
+}
+
+type GetKeystoreReply struct {
+	Keystore string
+}
+
+func (client *MedRecLocal) GetKeystore(r *http.Request, args *GetKeystoreArgs, reply *GetKeystoreReply) error {
+	tab := common.InstantiateLookupTable()
+	defer tab.Close()
+
+	path := common.GetKeystorePath(args.Username)
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	reply.Keystore = string(data)
+	return nil
+}
+
+// UNUSED FUNCTIONS
+// type SetNumAddressesArgs struct {
+// 	Username string
+// 	Password string
+// 	Num      int
+// }
+//
+// type SetNumAddressesReply struct {
+// 	Error string
+// }
+
+// // SetNumAddresses updates how many unique addresses have been generated
+// func (client *MedRecLocal) SetNumAddresses(r *http.Request, args *SetNumAddressesArgs, reply *SetNumAddressesReply) error {
+// 	tab := common.InstantiateLookupTable()
+// 	defer tab.Close()
+//
+// 	err := tab.Put([]byte(args.Username+"-number-addresses"), []byte(strconv.Itoa(args.Num)), nil)
+//
+// 	return err
+// }
+//
+// type GetNumAddressesArgs struct {
+// 	Username string
+// 	Num      int
+// }
+//
+// type GetNumAddressesReply struct {
+// 	Num   int
+// 	Error string
+// }
+//
+// // GetNumAddresses updates how many unique addresses have been generated
+// func (client *MedRecLocal) GetNumAddresses(r *http.Request, args *GetNumAddressesArgs, reply *GetNumAddressesReply) error {
+// 	tab := common.InstantiateLookupTable()
+// 	defer tab.Close()
+//
+// 	num, err := tab.Get([]byte(args.Username+"-number-addresses"), nil)
+// 	if err != nil {
+// 		reply.Error = err.Error()
+// 		return nil
+// 	}
+//
+// 	reply.Num, _ = strconv.Atoi(string(num))
+//
+// 	return nil
+// }

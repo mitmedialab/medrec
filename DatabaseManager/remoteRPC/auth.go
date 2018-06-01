@@ -7,11 +7,11 @@ package remoteRPC
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"../common"
@@ -34,7 +34,7 @@ func AuthenticatePatient(msg string, signature string) (string, error) {
 
 	messageSigner, _ := common.ECRecover(msg, signature)
 
-	ret, _ := tab.Has([]byte("uid-"+messageSigner), nil)
+	ret, _ := tab.Has([]byte("patient-uid-"+messageSigner), nil)
 
 	if ret {
 		return messageSigner, nil
@@ -100,59 +100,62 @@ func getUniqueID(account string) []byte {
 	return data
 }
 
-type AgentContractArgs struct {
-	Account   string //the acctount that should be set as the owner of the new AgentContract
+type GetProviderAccountArgs struct {
 	Time      string //unix time encoded into a hex string
 	Signature string //signature of the time
 }
 
-type AgentContractReply struct {
-	ContractAddress string
+type GetProviderAccountReply struct {
+	Account string
 }
 
-func (client *MedRecRemote) PatientAgentContract(r *http.Request, args *AgentContractArgs, reply *AgentContractReply) error {
-	_, err := AuthenticatePatient(args.Time, args.Signature)
+func (client *MedRecRemote) GetProviderAccount(r *http.Request, args *GetProviderAccountArgs, reply *GetProviderAccountReply) error {
+	patientAccount, err := AuthenticatePatient(args.Time, args.Signature)
 	if err != nil {
 		return err
 	}
-	//TODO check if the user already has an agent contract associated with them}
 
-	// sign the current time
-	curTime := fmt.Sprintf("%d", time.Now().Unix())
-	signature, err := common.Sign(curTime, args.Account)
-	if err != nil {
-		log.Fatalf("Failed to Sign: %v", err)
-	}
+	tab := common.InstantiateLookupTable()
+	defer tab.Close()
+	account, err := tab.Get([]byte(strings.ToLower("patient-provider-account"+patientAccount)), nil)
 
-	newAccount, err := exec.Command("node", "./GolangJSHelpers/generateNewAccount.js", common.WalletPassword).CombinedOutput()
-	if err != nil {
-		log.Fatalf("Failed to update the Agent Registry: %v", err)
-	}
-
-	nextArgs := &AgentContractArgs{string(newAccount), curTime, signature}
-	rpcClient, _ := GetMedRecRemoteRPCConn()
-	rpcClient.Call(&reply, "MedRecRemote.ProviderAgentContract", nextArgs)
-
-	_, err = exec.Command("node", "./GolangJSHelpers/addAgentToRegistry.js", reply.ContractAddress).CombinedOutput()
-	if err != nil {
-		log.Fatalf("Failed to update the Agent Registry: %v", err)
-	}
+	reply.Account = string(account)
 
 	return err
 }
 
-func (client *MedRecRemote) ProviderAgentContract(r *http.Request, args *AgentContractArgs, reply *AgentContractReply) error {
-	_, err := AuthenticateProvider(args.Time, args.Signature)
+type ChangeAccountArgs struct {
+	Account   string
+	Time      string
+	Signature string
+}
+
+type ChangeAccountReply struct {
+}
+
+//ChangeAccount transfers the mapping from patient account to unique identifier to a different account
+func (client *MedRecRemote) ChangeAccount(r *http.Request, args *ChangeAccountArgs, reply *ChangeAccountReply) error {
+	patientAccount, err := AuthenticatePatient(args.Time, args.Signature)
 	if err != nil {
 		return err
 	}
 
-	//create the agent contract and set it's owner using a helper script
-	contractAddr, err := exec.Command("node", "./GolangJSHelpers/makeNewAgent.js", args.Account).CombinedOutput()
+	tab := common.InstantiateLookupTable()
+	defer tab.Close()
+
+	uniqueID, _ := tab.Get([]byte(strings.ToLower("patient-uid-"+patientAccount)), nil)
+	err = tab.Put([]byte(strings.ToLower("patient-uid-"+args.Account)), []byte(uniqueID), nil)
 	if err != nil {
-		log.Fatalf("Failed to generate a new AgentContract %s for: %v", contractAddr, err)
+		return err
 	}
-	reply.ContractAddress = string(contractAddr)
+	tab.Delete([]byte(strings.ToLower("patient-uid-"+patientAccount)), nil)
+
+	newAccount, _ := tab.Get([]byte(strings.ToLower("patient-provider-"+patientAccount)), nil)
+	err = tab.Put([]byte(strings.ToLower("patient-provider-account"+args.Account)), []byte(newAccount), nil)
+	if err != nil {
+		return err
+	}
+	tab.Delete([]byte(strings.ToLower("patient-provider-"+patientAccount)), nil)
 
 	return nil
 }

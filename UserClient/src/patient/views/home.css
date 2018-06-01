@@ -1,3 +1,7 @@
+.left {
+  float: left;
+}
+
 #patientStyle {
   margin: 0;
   padding: 0;
@@ -88,7 +92,7 @@ button.buttonHome, button.buttonAbout, button.buttonRelationships {
   margin-right: 0.5vw;
   margin-bottom: 1vh;
   border-radius: 3px;
-  width: 150px; 
+  width: 150px;
   padding: 5px 8px;
   position: relative;
   border: 0 solid rgba(0,0,0,0.25);
@@ -183,7 +187,7 @@ td, tr{
 /*------------------------SMART CONTRACT------------------------*/
 
 .relationshipsTable {
-  display: flex; 
+  display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-start;
@@ -208,7 +212,7 @@ td, tr{
 /*------------------------DEAD MAN SWITCH------------------------*/
 
 .relationshipsTable > .DMswitch  {
-  display: flex; 
+  display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: flex-start;
@@ -247,7 +251,7 @@ td, tr{
 /*------------------------TABS FOR CONTRACT COLUMNS------------------------*/
 
 .tab {
-  display: flex; 
+  display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   padding: 0.5vh 0.2vw;
@@ -331,4 +335,38 @@ input#providerAccount, input#providerName, input#viewerName, input#viewerAccount
 
 input#permissionDuration {
   width: 10px;
+}
+
+/**************** Tooltip **************/
+.tooltip {
+    padding: 0 !important;
+    position: relative;
+    margin: auto 10px auto 0;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+    border-radius: 50%;
+    border: solid 1px black;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 1rem;
+    vertical-align: top;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 22vw;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 100;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
 }

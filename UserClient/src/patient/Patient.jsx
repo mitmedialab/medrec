@@ -58,7 +58,9 @@ class Patient extends Component {
         <div>
           <Route path="/patient/home" component={Home}/>
           <Route path="/patient/network" component={Network}/>
-          <Route path="/patient/relationships" render={(props) => (<Relationships contract={this.props.contract} {...props} />)} />
+          <Route path="/patient/relationships" render={(props) => (
+            <Relationships contract={this.props.contract} {...props} />
+          )} />
         </div>
       </div>
     );

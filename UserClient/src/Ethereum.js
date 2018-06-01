@@ -3,7 +3,7 @@ import contract from 'truffle-contract';
 import Promise from 'bluebird';
 import {keystore, signing} from 'eth-lightwallet';
 import ProviderEngine from 'web3-provider-engine';
-import FilterSubprovider from 'web3-provider-engine/subproviders/filters.js';
+//import FilterSubprovider from 'web3-provider-engine/subproviders/filters.js';
 import HookedWalletSubprovider from 'web3-provider-engine/subproviders/hooked-wallet.js';
 import NonceSubprovider from 'web3-provider-engine/subproviders/nonce-tracker.js';
 import RpcSubprovider from 'web3-provider-engine/subproviders/rpc.js';
@@ -14,6 +14,7 @@ import relationshipJson from '../../SmartContracts/build/contracts/Relationship.
 import Transaction from 'ethereumjs-tx';
 import Utils from 'ethereumjs-util';
 import {store} from './reduxStore';
+import RPCClient from './RPCClient';
 
 class Ethereum {
   constructor () {
@@ -44,7 +45,7 @@ class Ethereum {
   waitForVault () {
     return new Promise((resolve, reject) => {
       let check = () => {
-        if(this.vault) {
+        if(this.vault && this.pwDerivedKey) {
           resolve(this.vault);
         }else {
           setTimeout(check, 200);
@@ -122,7 +123,7 @@ class Ethereum {
   //initialize the modular Web3 API provider
   initWeb3Provider () {
     //filters
-    this.engine.addProvider(new FilterSubprovider());
+    //this.engine.addProvider(new FilterSubprovider());
 
     //pending nonce
     this.engine.addProvider(new NonceSubprovider());
@@ -204,11 +205,12 @@ class Ethereum {
 
     //wait for the ethereum client to be connected, then start polling for blocks
     this.waitForRPCConn().then(() => {
-      this.web3.setProvider(this.engine);
       this.engine.start();
+      this.web3.setProvider(this.engine);
     });
   }
 
+  //TODO: delete this
   //gets the current user's account
   getAccounts () {
     return new Promise((resolve, reject) => {
@@ -218,6 +220,7 @@ class Ethereum {
     });
   }
 
+  //TODO: delete this
   signMessage (address, dataToSign) {
     return new Promise((resolve, reject) => {
       this.web3.eth.sign((err, signedMsgHex) => {
@@ -258,22 +261,29 @@ class Ethereum {
     return new Promise((resolve, reject) => {
       let data = store.getState().homeReducer;
       if(data.seed != undefined) {
-        this.generateVault(data.password, data.seed, 1).then(resolve);
+
+        RPCClient.send('MedRecLocal.GetKeystore', {
+          Username: data.username,
+        }, false)
+          .then(res => {
+            this.vault = keystore.deserialize(res.Keystore);
+            this.vault.keyFromPassword(data.password, (err, pwDerivedKey) => {
+              if(err !== null) reject(err);
+              this.pwDerivedKey = pwDerivedKey;
+              resolve(this.vault);
+            });
+          });
         return;
       }
       reject('no user is logged in');
     });
   }
 
-  //generate a new vault
-  //password: mandatory
-  //seed: used to generate HD private keys, default is random generation
-  //numAddresses: number of addresses to generate, default is 1
   generateVault (password, seed, numAddresses) {
     seed = seed || keystore.generateRandomSeed();
     numAddresses = numAddresses || 1;
     return new Promise((resolve, reject) => {
-      //the seed is stored encrypted by a user-defined password
+    //the seed is stored encrypted by a user-defined password
       keystore.createVault({
         password: password,
         seedPhrase: seed,
@@ -289,17 +299,30 @@ class Ethereum {
           //the corresponding private keys are also encrypted
           vault.generateNewAddress(pwDerivedKey, numAddresses);
           this.vault = vault;
-
-          //reset the waitForVault function so it takes the new vault value
-          //this.waitForVault = new Promise((vaultResolve) => {
-          //vaultResolve(this.vault);
-          //});
-          //TODO: make sure the above isn't needed any more
-
           this.pwDerivedKey = pwDerivedKey;
-          resolve(vault);
+
+          let data = store.getState().homeReducer;
+          RPCClient.send('MedRecLocal.SaveKeystore', {
+            Username: data.username,
+            Keystore: this.vault.serialize(),
+          }).then(() => {
+            resolve(vault);
+          });
         });
       });
+    });
+  }
+
+  generateAccount () {
+    console.log(this.pwDerivedKey, 'generating acc');
+    this.vault.generateNewAddress(this.pwDerivedKey, 1);
+    let data = store.getState().homeReducer;
+    return RPCClient.send('MedRecLocal.SaveKeystore', {
+      Username: data.username,
+      Keystore: this.vault.serialize(),
+    }).then(() => {
+      let accs = this.vault.getAddresses();
+      return accs[accs.length - 1];
     });
   }
 

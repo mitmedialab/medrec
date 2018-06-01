@@ -9,14 +9,16 @@ class Home extends Component {
     this.state = {
       sponsor: '',
       hasAgent: false,
-      accountAddress: '',
-      agentAddress: 'No Agent Contract exists yet',
+      mainAccount: '',
+      oneTimeAccount: '',
     };
 
     this.createAgent = this.createAgent.bind(this);
+    this.generateAccount = this.generateAccount.bind(this);
     this.valueChanged = this.valueChanged.bind(this);
   }
   createAgent (event) {
+    console.log('Creating Agent contract, please wait.....');
     event.preventDefault();
     if(this.state.hasAgent)return;
     let accounts;
@@ -32,23 +34,18 @@ class Home extends Component {
         return agentRegContract.getAgentHost(this.state.sponsor);
       }).then(_host => {
         host = _host;
-        console.log('the agent host', this.state.sponsor);
         //send a message to the faucet to fund the new account
         return RPCClient.remote(host).send('MedRecRemote.PatientFaucet', {Account: this.state.sponsor});
-      }).then(faucetRes => {
-        console.log('have returned from faucet', faucetRes);
-        //wait for the funding transaction to go through
-        return Ethereum.waitForTx(faucetRes.Txid);
-      }).then( () => {
-        //create a new agent contract for the user
-        return Ethereum.getAgent();
-      }).then(agent => agent.new()).then((agentContract) => {
-        //register the agent contract in the agent registry
-        return agentRegContract.setAgentContractAddr(agentContract.address);
-      }).then(txResult => {
-        //wait for the registry tx to finish
-        return Ethereum.waitForTx(txResult.tx);
-      }).then(() => {
+      })
+      //wait for the funding transaction to go through
+      .then(faucetRes => Ethereum.waitForTx(faucetRes.Txid))
+      //create a new agent contract for the user
+      .then(() => Ethereum.getAgent())
+      .then(agent => agent.new())
+      //register the agent contract in the agent registry
+      .then((agentContract) => agentRegContract.setAgentContractAddr(agentContract.address))
+      //wait for the registry tx to finish
+      .then(txResult => Ethereum.waitForTx(txResult.tx)).then(() => {
         console.log('Agent created and registered');
         console.log(this.state.contract);
         this.setState({
@@ -56,6 +53,11 @@ class Home extends Component {
           hasAgent: true,
         });
       });
+  }
+  generateAccount () {
+    Ethereum.generateAccount().then(account => {
+      this.setState({oneTimeAccount: account});
+    });
   }
   valueChanged (event) {
     let state = this.state;
@@ -68,7 +70,9 @@ class Home extends Component {
       firstTimeSection = (
         <div>
           <h2>First time account setup</h2>
-          <p>your account must be sponsored by a provider, enter your sponsor's account below</p>
+          <p>Give this unique account to your provider to initialize your account in the MedRec Network</p>
+          {this.state.mainAccount}
+          <p>When your provider tells you, continue by submitting your sponsor provider&#39; s account below</p>
           <form>
             <label>
               <span>sponsor</span>
@@ -80,13 +84,27 @@ class Home extends Component {
       );
     }
 
+    let returningSection;
+    if(this.state.hasAgent) {
+      returningSection = (
+        <div>
+          <h2>
+            Single Use Account ID &nbsp;
+            <span className="tooltip">
+                ?
+              <span className="tooltiptext">MedRec protects your privacy by allowing you to generate a unique account id for every relationship. There is no limit to how many can be generated. Never reuse an account id.</span>
+            </span>
+          </h2>
+          <button onClick={this.generateAccount}>Generate</button> &nbsp;
+          {this.state.oneTimeAccount}
+        </div>
+      );
+    }
+
     return  (
       <div className="mainPanel">
-        <h2>Local Account</h2>
-        <p>{this.state.accountAddress}</p>
-        <h2>Agent Contract Address</h2>
-        <p>{this.state.agentAddress}</p>
         {firstTimeSection}
+        {returningSection}
         <h2>Your medical records overview</h2>
         <p>Here you can access your most recent medical records.</p>
         <Tests/>
@@ -103,12 +121,11 @@ class Home extends Component {
       .then(reg => reg.deployed())
       .then(agentRegistry => {
         this.setState({
-          accountAddress: accounts[0],
+          mainAccount: accounts[0],
         });
         return agentRegistry.getAgentContractAddr(accounts[0]);
       })
       .then(agentAddress => {
-        console.log('agentAddress', agentAddress);
         if(parseInt(agentAddress, 16) != 0) {
           this.setState({
             hasAgent: true,

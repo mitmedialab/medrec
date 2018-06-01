@@ -1,8 +1,7 @@
 import React, {Component} from 'react';
 import Ethereum from '../../Ethereum';
-import RPCClient from '../../RPCClient';
 
-import {InteractiveForceGraph, ForceGraphNode, ForceGraphArrowLink, ForceGraphLink} from 'react-vis-force';
+import {InteractiveForceGraph, ForceGraphNode, ForceGraphLink} from 'react-vis-force';
 import './chart.css';
 
 class Network extends Component {
@@ -22,8 +21,8 @@ class Network extends Component {
     let radiusViewer = 7;
     return (
       <div className="mainPanel">
-		 <h2>Network overview</h2>
-		 <p>You currently have {this.state.nodes.length - this.state.links.length} Provider <span className="colorBlock" style={{background: colorProvider}}></span> relationships and {this.state.links.length} Viewer <span className="colorBlock" style={{background: colorViewer}}></span> relationships.</p>
+        <h2>Network overview</h2>
+        <p>You currently have {this.state.nodes.length - this.state.links.length} Provider <span className="colorBlock" style={{background: colorProvider}}></span> relationships and {this.state.links.length} Viewer <span className="colorBlock" style={{background: colorViewer}}></span> relationships.</p>
         <InteractiveForceGraph
           simulationOptions={{ animate: true, radiusMargin: 10, strength: { collide: 10 }, height: 400, width: 600 }}
           labelAttr="label"
@@ -34,7 +33,7 @@ class Network extends Component {
           {this.state.nodes.map((node) => <ForceGraphNode key={node.id} node={{ radius: node.group === 'provider' ? radiusProvider : radiusViewer, id: node.id, label: node.id}} fill={node.group === 'provider' ? colorProvider : colorViewer}  />)}
           {this.state.links.map((link) => <ForceGraphLink key={`${link.source}=>${link.target}`} link={{ source: link.source, target: link.target, strokeWidth: 2}} />)}
         </InteractiveForceGraph>
-	   </div>
+      </div>
     );
   }
   componentDidMount () {

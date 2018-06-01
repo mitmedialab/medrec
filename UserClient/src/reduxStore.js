@@ -15,3 +15,5 @@ let store = createStore(persistReducer(persistOptions, combineReducers({
 })));
 let persistor = persistStore(store);
 export {store, persistor};
+
+//TODO remove all references to react-redux.connect and just import the state from here

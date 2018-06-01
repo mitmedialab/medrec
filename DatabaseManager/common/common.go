@@ -95,3 +95,18 @@ func InstantiateLookupTable() *leveldb.DB {
 
 	return tab
 }
+
+func GetKeystorePath(username string) string {
+	var home string
+
+	if runtime.GOOS == "windows" {
+		home = os.Getenv("APPDATA") + "/MedRec"
+	} else if runtime.GOOS == "darwin" {
+		log.Println("darwmin")
+		home = os.Getenv("HOME") + "/Library/Preferences"
+	} else {
+		home = os.Getenv("HOME") + "/.medrec"
+	}
+
+	return home + "/" + username + "-keystore.keystore"
+}

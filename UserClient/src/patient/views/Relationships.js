@@ -130,6 +130,9 @@ class Permissions extends Component {
     );
   }
   componentDidMount () {
+    if(this.props.relationshipAcc === undefined)return;
+    console.log(this.props.relationshipAcc, 'dad');
+
     let accounts;
     let relationship;
     let providerAddr;
