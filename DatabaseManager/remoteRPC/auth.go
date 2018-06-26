@@ -73,33 +73,6 @@ func AuthenticateProvider(msg string, signature string) (string, error) {
 	return "", errors.New("account is not a provider")
 }
 
-func lookupPatient(address []byte) []byte {
-
-	tab := common.InstantiateLookupTable()
-	defer tab.Close()
-
-	log.Println("instantiated, in lookup, address is", address)
-	data, err := tab.Get(address, nil)
-	if err != nil {
-		log.Println(err)
-	}
-
-	log.Println(data)
-	return data
-}
-
-func getUniqueID(account string) []byte {
-	tab := common.InstantiateLookupTable()
-	defer tab.Close()
-
-	data, err := tab.Get([]byte("uid"+account), nil)
-	if err != nil {
-		log.Println(err)
-	}
-
-	return data
-}
-
 type GetProviderAccountArgs struct {
 	Time      string //unix time encoded into a hex string
 	Signature string //signature of the time

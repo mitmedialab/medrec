@@ -13,6 +13,8 @@ import agentRegistryJson from '../../SmartContracts/build/contracts/AgentRegistr
 import relationshipJson from '../../SmartContracts/build/contracts/Relationship.json';
 import Transaction from 'ethereumjs-tx';
 import Utils from 'ethereumjs-util';
+import bitcore from 'bitcore-lib';
+import ecies from 'eth-ecies';
 import {store} from './reduxStore';
 import RPCClient from './RPCClient';
 
@@ -131,13 +133,14 @@ class Ethereum {
     //accounts management
     this.engine.addProvider(new HookedWalletSubprovider({
       getAccounts: (cb) => {
-        this.getVault().then(vault => {
-          if(vault) {
-            cb(null, vault.getAddresses());
-          }else {
-            cb('no keys available, login frst', null);
-          }
-        });
+        this.getVault()
+          .then(vault => {
+            if(vault) {
+              cb(null, vault.getAddresses());
+            }else {
+              cb('no keys available, login frst', null);
+            }
+          });
       },
       signMessage: (options, cb) => {
         this.getVault().then(vault => {
@@ -210,25 +213,6 @@ class Ethereum {
     });
   }
 
-  //TODO: delete this
-  //gets the current user's account
-  getAccounts () {
-    return new Promise((resolve, reject) => {
-      this.web3.eth.getAccounts((err, accounts) => {
-        resolve(accounts);
-      });
-    });
-  }
-
-  //TODO: delete this
-  signMessage (address, dataToSign) {
-    return new Promise((resolve, reject) => {
-      this.web3.eth.sign((err, signedMsgHex) => {
-        resolve(signedMsgHex);
-      });
-    });
-  }
-
   getAgentRegistry () {
     return new Promise((resolve, reject) => {
       this.getVault().then(vault => {
@@ -254,6 +238,12 @@ class Ethereum {
         resolve(this.Relationship);
       });
     });
+  }
+
+  //need this abstraction because web3's getAccounts function does not fully
+  //support promises like bluebird does
+  getAccounts () {
+    return Promise.resolve(this.web3.eth.getAccounts());
   }
 
   //if the user is coming back after refreshing the page then refresh the vault
@@ -314,7 +304,6 @@ class Ethereum {
   }
 
   generateAccount () {
-    console.log(this.pwDerivedKey, 'generating acc');
     this.vault.generateNewAddress(this.pwDerivedKey, 1);
     let data = store.getState().homeReducer;
     return RPCClient.send('MedRecLocal.SaveKeystore', {
@@ -351,6 +340,46 @@ class Ethereum {
   waitForTx (txid) {
     return new Promise((resolve, reject) => {
       this.pendingTransactions.push({txid, resolve});
+    });
+  }
+
+  convertAddressToPub (account) {
+    return new Promise((resolve, reject) => {
+      let privKey = this.vault.exportPrivateKey(account.toLowerCase(), this.pwDerivedKey);
+      let pubKey = Utils.privateToPublic('0x' + privKey);
+      resolve(pubKey.toString('hex'));
+    });
+  }
+
+  convertPubToAddress (pubKey) {
+    return new Promise((resolve, reject) => {
+      let address = Utils.pubToAddress('0x' + pubKey);
+      resolve(address.toString('hex'));
+    });
+  }
+
+  /**
+ * encrypt the message with the publicKey of the desired identity
+ * @param {string} publicKey the publicKey of the recipient
+ * @param  {string} message the message to encrypt
+ */
+  encrypt (publicKey, message) {
+    return new Promise((resolve, reject) => {
+      let ciphertext = ecies.encrypt(Buffer.from(publicKey, 'hex'), Buffer.from(message));
+      resolve(ciphertext.toString('hex'));
+    });
+  }
+
+  /**
+ * decrypt the message with the privateKey
+ * @param  {string} publicKey the key associated with the decryption private key
+ * @param  {string} encrypted the encrypted text
+ */
+  decrypt (account, ciphertext) {
+    return new Promise((resolve, reject) => {
+      let privateKey = this.vault.exportPrivateKey(account.toLowerCase(), this.pwDerivedKey);
+      let message = ecies.decrypt(Buffer.from(privateKey, 'hex'), Buffer.from(ciphertext, 'hex'));
+      resolve(message.toString());
     });
   }
 }

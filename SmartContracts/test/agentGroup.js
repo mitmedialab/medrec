@@ -16,17 +16,6 @@ contract('AgentGroup', function (accounts) {
     });
   });
 
-  it('should let the agent add a permission', function () {
-    return agentGroup.addPermission(constants.perm1, {from: constants.agent1});
-  });
-
-  it('should not let other people add permissions', function () {
-    return agentGroup.addPermission(constants.perm2, {from: constants.agent2})
-      .then(() => {assert(false2);}, (test, err) => {
-        assert(true);
-      });
-  });
-
   it('should not let the agent remove the only agent', function () {
     return agentGroup.removeAgent(constants.agent1, false, {from: constants.agent1})
       .then(() => {assert(false);}, (test, err) => {
@@ -72,10 +61,6 @@ contract('AgentGroup', function (accounts) {
     });
   });
 
-  it('should let the agent add a permission', function () {
-    return agentGroup.addPermission(constants.perm2, {from: constants.family1});
-  });
-
   it('should let agents remove an agent', function () {
     return agentGroup.removeAgent(constants.agent1, {from: constants.family1});
   });
@@ -83,12 +68,6 @@ contract('AgentGroup', function (accounts) {
   it('should have the right number of owners', function () {
     return agentGroup.getNumAgents().then(agents => {
       assert.equal(agents, 2);
-    });
-  });
-
-  it('should have the right number of permissions', function () {
-    return agentGroup.getNumPermissions().then(perms => {
-      assert.equal(perms, 2);
     });
   });
 });

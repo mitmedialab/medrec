@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux';
 import './dropdownmenu.css';
-import {CLEAR_USER} from '../constants';
+import {CLEAR_USER, CLEAR_RELATIONSHIP} from '../constants';
 
 class DropDownMenu extends Component {
   constructor (props) {
@@ -21,6 +21,7 @@ class DropDownMenu extends Component {
 
   signout () {
     this.props.dispatch({type: CLEAR_USER});
+    this.props.dispatch({type: CLEAR_RELATIONSHIP});
     this.props.history.push('/');
   }
 

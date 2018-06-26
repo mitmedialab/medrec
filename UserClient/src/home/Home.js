@@ -104,7 +104,7 @@ class Home extends Component {
   }
 
   changeFieldById (event) {
-    //TODO: add a step to check that when the username is set it doesn't conflict
+    //TODO: add a step to check that when the username is changed it doesn't conflict
     //TODO: with another username
     let state = this.state;
     state[event.target.id] = event.target.value;

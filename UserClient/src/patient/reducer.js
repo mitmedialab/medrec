@@ -1,4 +1,4 @@
-import {SET_RELATIONSHIP, SET_VIEWER} from '../constants';
+import {SET_RELATIONSHIP, SET_VIEWER, CLEAR_RELATIONSHIP} from '../constants';
 
 function patientReducer (state, action) {
   if(state === undefined) {
@@ -6,6 +6,8 @@ function patientReducer (state, action) {
   }
 
   switch (action.type) {
+    case CLEAR_RELATIONSHIP:
+      return {};
     case SET_RELATIONSHIP:
       return Object.assign({}, state, {
         relationshipAcc: action.relationshipAcc,

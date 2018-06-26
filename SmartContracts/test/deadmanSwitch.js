@@ -32,18 +32,24 @@ contract('DeadmanSwitch', function (accounts) {
     return agent.setTimeout(5000, {from: constants.agent2});
   });
 
+  it('should have the right timeout time', function () {
+    return  agent.timeout().then(time => {
+      assert.equal(time, 5000);
+    });
+  });
+
   it('should stil have an alive agent', function () {
     return agent.isAlive().then(alive => {
       assert.isTrue(alive);
     });
   });
 
-  it('should set the timeout to 5 seconds', function (done) {
+  it('should be dead after 5 seconds', function (done) {
     agent.touch({from: constants.agent2}).then(() => {
       web3.currentProvider.sendAsync({
         jsonrpc: '2.0',
         method: 'evm_increaseTime',
-        params: [5000],
+        params: [6000],
         id: new Date().getTime(),
       }, (err, res) => {
         if(err !== null)throw err;

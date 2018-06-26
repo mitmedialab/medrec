@@ -47,17 +47,6 @@ contract('Agent', function (accounts) {
     return agent.addRelationship(constants.pharmacy1, {from: constants.agent2});
   });
 
-  it('should let the agent add a permission', function () {
-    return agent.addPermission(constants.perm1, {from: constants.agent2});
-  });
-
-  it('should not let other people add permissions', function () {
-    return agent.addPermission(constants.perm2, {from: constants.agent1})
-      .then(() => {assert(false2);}, (test, err) => {
-        assert(true);
-      });
-  });
-
   it('should not let the agent remove the only owner', function () {
     return agent.enableAgent(false, {from: constants.agent1})
       .then(() => {assert(false);}, (test, err) => {
@@ -118,17 +107,6 @@ contract('Agent', function (accounts) {
     return agent.addRelationship(constants.provider2, {from: constants.family1});
   });
 
-  it('should let the custodian add a permission', function () {
-    return agent.addPermission(constants.perm2, {from: constants.family2});
-  });
-
-  it('should not let the agent add permissions', function () {
-    return agent.addPermission(constants.perm3, {from: constants.agent2})
-      .then(() => {assert(false2);}, (test, err) => {
-        assert(true);
-      });
-  });
-
   it('should let the custodian disable a custodian', function () {
     return agent.enableCustodian(constants.family1, false, {from: constants.family1});
   });
@@ -142,12 +120,6 @@ contract('Agent', function (accounts) {
   it('should have the right number of relationships', function () {
     return agent.getNumRelationships().then(relations => {
       assert.equal(relations, 3);
-    });
-  });
-
-  it('should have the right number of permissions', function () {
-    return agent.getNumPermissions().then(perms => {
-      assert.equal(perms, 2);
     });
   });
 });

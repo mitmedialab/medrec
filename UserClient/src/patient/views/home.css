@@ -264,7 +264,7 @@ td, tr{
 }
 
 .tab > span {
-  overflow-y: scroll;
+  overflow-y: auto;
   width: auto;
   padding: 0 0.2vw;
 }

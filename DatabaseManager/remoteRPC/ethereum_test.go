@@ -61,13 +61,13 @@ func TestFaucet(t *testing.T) {
 	localClient.AddAccount(nil, addArgs, addReply)
 
 	//create the arguments to the call to the faucet
-	faucetArgs := &FaucetArgs{
+	faucetArgs := &PatientFaucetArgs{
 		Account: accounts[1],
 		Time:    fmt.Sprintf("%d", time.Now().Unix()),
 	}
 	faucetArgs.Signature, _ = common.Sign(faucetArgs.Time, accounts[0])
 
-	faucetReply := &FaucetReply{}
+	faucetReply := &PatientFaucetReply{}
 
 	//request the faucent send some ether
 	err = remoteClient.PatientFaucet(nil, faucetArgs, faucetReply)

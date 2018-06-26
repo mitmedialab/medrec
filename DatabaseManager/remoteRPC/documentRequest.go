@@ -6,11 +6,12 @@ import (
 	"net/http"
 
 	"../common"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 type PatientDocumentsArgs struct {
 	PatientID int
+	Time      string
+	Signature string
 }
 
 type PatientDocumentsReply struct {
@@ -21,18 +22,24 @@ type PatientDocumentsReply struct {
 
 //returns a pointer to an sql database.
 func (client *MedRecRemote) PatientDocuments(r *http.Request, args *PatientDocumentsArgs, reply *PatientDocumentsReply) error {
+	patientAccount, err := AuthenticatePatient(args.Time, args.Signature)
+	if err != nil {
+		return err
+	}
 
+	tab := common.InstantiateLookupTable()
+	defer tab.Close()
 	db := instantiateDatabase()
 	defer db.Close()
 
-	newID := lookupPatient([]byte("address1"))
-	s := string(newID[:])
+	uid, err := tab.Get([]byte(common.PrefixPatientUID(patientAccount)), nil)
+	if err != nil {
+		return err
+	}
 
-	log.Println("got id from level db", s)
+	fmt.Printf("fetching records for patient %s with uid %s \n", patientAccount, string(uid))
 
-	fmt.Printf("fetching records for patient %d \n", args.PatientID)
-
-	rows, err := db.Query(fmt.Sprintf("SELECT PatientID, DocumentID, DocDateTime, PracticeID, RecvdDateTime FROM document_info WHERE PatientID = %d", 1))
+	rows, err := db.Query(fmt.Sprintf("SELECT PatientID, DocumentID, DocDateTime, PracticeID, RecvdDateTime FROM document_info WHERE PatientID = %s", uid))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,6 +54,7 @@ func (client *MedRecRemote) PatientDocuments(r *http.Request, args *PatientDocum
 		RecvdDateTime string
 	)
 	for rows.Next() {
+		log.Println("have another row")
 		err = rows.Scan(&PatientID, &DocumentID, &DocDateTime, &PracticeID, &RecvdDateTime)
 		if err != nil {
 			log.Fatal(err)

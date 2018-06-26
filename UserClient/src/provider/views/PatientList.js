@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {connect} from 'react-redux';
+import {store} from '../../reduxStore';
 import RPCClient from '../../RPCClient';
 
 class PatientList extends Component {
@@ -15,11 +15,12 @@ class PatientList extends Component {
   }
   addPatient (event) {
     event.preventDefault();
+    let globalState = store.getState().homeReducer;
     RPCClient.send('MedRecLocal.AddAccount', {
       UniqueID: this.state.uid,
       Account: this.state.account,
-      Username: this.props.username,
-      Password: this.props.password,
+      Username: globalState.username,
+      Password: globalState.password,
     }).then(() => {
       this.setState({
         uid: '',
@@ -77,9 +78,4 @@ class PatientList extends Component {
   }
 }
 
-export default connect(state => {
-  return {
-    username: state.homeReducer.username,
-    password: state.homeReducer.password,
-  };
-})(PatientList);
+export default PatientList;

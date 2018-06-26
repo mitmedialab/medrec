@@ -28,7 +28,7 @@ class Home extends Component {
   }
   proposeSelf (event) {
     event.preventDefault();
-    Ethereum.web3.eth.getAccounts()
+    Ethereum.getAccounts()
       .then(accounts => {
         return RPCClient.remote('127.0.0.1').send('MedRecRemote.Faucet', {Account: accounts[0]});
       })
@@ -223,7 +223,7 @@ class Home extends Component {
           return proposedSignerAccounts.map(x => agentRegistry.getAgentName(x));
         }).spread((...pronam) => {
           proposedSignerNames = pronam;
-          return Ethereum.web3.eth.getAccounts();
+          return Ethereum.getAccounts();
         }).then(accounts => {
           return proposedSignerAccounts.map(x => agentRegistry.getVoteInfo(x, accounts[0]));
         }).spread((...voat) => {
@@ -255,7 +255,7 @@ class Home extends Component {
           return kickedSignerAccounts.map(x => agentRegistry.getAgentName(x));
         }).spread((...kicknam) => {
           kickedSignerNames = kicknam;
-          return Ethereum.web3.eth.getAccounts();
+          return Ethereum.getAccounts();
         }).then(accounts => {
           return kickedSignerAccounts.map(x => agentRegistry.getVoteInfo(x, accounts[0]));
         }).spread((...voat) => {

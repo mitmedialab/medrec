@@ -28,7 +28,7 @@ class Home extends Component {
       .then(reg => reg.deployed()).then(_regContract => {
         agentRegContract = _regContract;
         //get the current set of ethereum account
-        return Ethereum.web3.eth.getAccounts();
+        return Ethereum.getAccounts();
       }).then(_acc => {
         accounts = _acc;
         return agentRegContract.getAgentHost(this.state.sponsor);
@@ -47,7 +47,6 @@ class Home extends Component {
       //wait for the registry tx to finish
       .then(txResult => Ethereum.waitForTx(txResult.tx)).then(() => {
         console.log('Agent created and registered');
-        console.log(this.state.contract);
         this.setState({
           sponsor: '',
           hasAgent: true,
@@ -55,9 +54,18 @@ class Home extends Component {
       });
   }
   generateAccount () {
-    Ethereum.generateAccount().then(account => {
-      this.setState({oneTimeAccount: account});
-    });
+    let uniqueAccount;
+    Ethereum.generateAccount()
+      .then(_account => {
+        uniqueAccount = _account;
+        return Ethereum.getAccounts();
+      })
+      .then(accounts => {
+        return Ethereum.convertAddressToPub(accounts[0]);
+      })
+      .then(pubkey => {
+        this.setState({oneTimeAccount: pubkey + ':' + uniqueAccount});
+      });
   }
   valueChanged (event) {
     let state = this.state;
@@ -95,8 +103,8 @@ class Home extends Component {
               <span className="tooltiptext">MedRec protects your privacy by allowing you to generate a unique account id for every relationship. There is no limit to how many can be generated. Never reuse an account id.</span>
             </span>
           </h2>
-          <button onClick={this.generateAccount}>Generate</button> &nbsp;
-          {this.state.oneTimeAccount}
+          <button onClick={this.generateAccount}>Generate</button>
+          <p>{this.state.oneTimeAccount}</p>
         </div>
       );
     }
@@ -113,7 +121,7 @@ class Home extends Component {
   }
   componentDidMount () {
     let accounts;
-    Ethereum.web3.eth.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getAgentRegistry();

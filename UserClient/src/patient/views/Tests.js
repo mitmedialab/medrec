@@ -21,12 +21,12 @@ class Tests extends Component {
 
   //fetch documents
   fetchDocument () {
-    RPCClient.remote('127.0.0.1').send('MedRecRemote.PatientDocuments', {
-      PatientID: 1,
-    }).then( (res) => {
+    RPCClient.remote('127.0.0.1').send('MedRecRemote.PatientDocuments').then( (res) => {
       if(res.Error !== '') {
         throw (res.Error);
-      }else {
+      }
+      if(res.Documents !== null) {
+        console.log('got response', res);
         this.setState({documents: res.Documents});
         this.setState({tableState: 'isVisible'});
       }

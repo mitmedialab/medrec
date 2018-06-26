@@ -33,6 +33,10 @@ type NoArgs struct {
 	// nothin
 }
 
+func PrefixPatientUID(input string) string {
+	return "patient-uid-" + strings.ToLower(input)
+}
+
 // NodeExec calls node and abstracts away figuring out where the node binary is located
 func NodeExec(args ...string) *exec.Cmd {
 	cmd := []string{"node"}

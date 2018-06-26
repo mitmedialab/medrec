@@ -23,7 +23,7 @@ class RPCClient {
       if(signed) {
       //sign the message with the current time before sending
         args.Time = '' + (new Date).getTime();
-        Ethereum.web3.eth.getAccounts()
+        Ethereum.getAccounts()
           .then(accounts => {
             return  Ethereum.web3.eth.sign(args.Time, accounts[0]);
           }).then(sig => {

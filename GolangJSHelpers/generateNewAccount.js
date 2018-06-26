@@ -7,7 +7,8 @@ let path = process.argv[2] || 'path';
 let password = process.argv[3] || '';
 
 //TODO there is a potential race condition if this script is called in rapid succession
-//TODO this should be fixed by making a single node server handle requests
+//TODO this could be fixed by making the GolangHelpers into a single node server
+//TODO or using a concurrent access enabled database handle requests
 let serializedKeystore = fs.readFileSync(path, {flag: 'r'});
 let vault = keystore.deserialize(serializedKeystore);
 
