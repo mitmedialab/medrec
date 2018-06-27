@@ -221,17 +221,20 @@ class Home extends Component {
               <div>
                 <input type="radio" checked={this.state.contract === 'agent'} value="agent"
                   onChange={this.selectContract}></input>Default
-                <span className="preview" id="agent" onClick={this.enablePreviewModal}>Preview</span>
+                <span className="preview"
+                  id="agent" onClick={this.enablePreviewModal}>Preview</span>
               </div>
               <div>
                 <input type="radio" checked={this.state.contract === 'group'} value="group"
                   onChange={this.selectContract}></input>Group
-                <span className="preview" id="group" onClick={this.enablePreviewModal}>Preview</span>
+                <span className="preview"
+                  id="group" onClick={this.enablePreviewModal}>Preview</span>
               </div>
               <div>
                 <input type="radio" checked={this.state.contract === 'DMswitch'} value="DMswitch"
                   onChange={this.selectContract}></input>DM Switch
-                <span className="preview" id="DMswitch" onClick={this.enablePreviewModal}>Preview</span>
+                <span className="preview"
+                  id="DMswitch" onClick={this.enablePreviewModal}>Preview</span>
               </div>
             </div>
             <div id={identityStyle}>
@@ -261,7 +264,8 @@ class Home extends Component {
           <div onClick={this.closeModal} className="modalBackground"></div>
           <div className={classnames({modalContent: true, display: this.state.enableSeedModal})}>
             <button className="close" onClick={this.closeModal}></button>
-            <p>The following seed can be used to recover your account, be sure to write it down and keep it somewhere safe.</p>
+            <p>The following seed can be used to recover your account, be sure to write it down
+              and keep it somewhere safe.</p>
             <p className="seed">{this.state.seed}</p>
             <button className="buttonStyle" onClick={this.openConfirmModal}>Next</button>
           </div>

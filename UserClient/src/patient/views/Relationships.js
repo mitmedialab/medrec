@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import Ethereum from '../../Ethereum';
 import RPCClient from '../../RPCClient';
-import {store} from '../../reduxStore';
+import {connect} from 'react-redux';
 import {SET_RELATIONSHIP, SET_VIEWER} from '../../constants';
 
 class Permissions extends Component {
@@ -23,7 +23,6 @@ class Permissions extends Component {
   addPermission (event) {
     event.preventDefault();
 
-    let patientState =  store.getState().patientReducer;
     let accounts;
     let relationship;
     let providerAddr;
@@ -33,7 +32,7 @@ class Permissions extends Component {
         return Ethereum.getRelationship();
       })
       .then(relationGenerator => {
-        relationship = relationGenerator.at(patientState.relationshipAcc);
+        relationship = relationGenerator.at(this.props.relationshipAcc);
         return relationship.providerAddr();
       })
       .then(encryptedAddr => {
@@ -49,7 +48,7 @@ class Permissions extends Component {
         //send a message to the faucet to fund the new account
         return RPCClient.remote(host).send('MedRecRemote.AddPermission', {
           AgentID: '0', //TODO: get the actual agentID
-          ViewerGroup: patientState.viewerGroup,
+          ViewerGroup: this.props.viewerGroup,
           Name: this.state.permissionName,
           StartTime: this.state.permissionStartTime,
           DurationDays: this.state.permissionDuration,
@@ -89,8 +88,7 @@ class Permissions extends Component {
     this.update();
   }
   render () {
-    let patientState =  store.getState().patientReducer;
-    if(patientState.viewerGroup == undefined) {
+    if(this.props.viewerGroup == undefined) {
       return (<div></div>);
     }
 
@@ -98,7 +96,7 @@ class Permissions extends Component {
       return (<div></div>);
     }
     let permissions = [];
-    if(patientState.viewerGroup !== undefined) {
+    if(this.props.viewerGroup !== undefined) {
       for(let i = 0; i < this.state.permissionNames.length; i ++) {
         permissions.push(
           <div className="tab" key={i}>
@@ -137,14 +135,13 @@ class Permissions extends Component {
     );
   }
   componentDidMount () {
-    let patientState =  store.getState().patientReducer;
-    if(patientState.viewerGroup == undefined)return;
-
+    this.update();
+  }
+  componentDidUpdate (nextProps) {
     this.update();
   }
   update () {
-    let patientState =  store.getState().patientReducer;
-    if(patientState.viewerGroup == undefined)return;
+    if(this.props.viewerGroup == undefined)return;
 
     let accounts;
     let relationship;
@@ -155,7 +152,7 @@ class Permissions extends Component {
         return Ethereum.getRelationship();
       })
       .then(relationGenerator => {
-        relationship = relationGenerator.at(patientState.relationshipAcc);
+        relationship = relationGenerator.at(this.props.relationshipAcc);
         return relationship.providerAddr();
       })
       .then(encryptedAddr => {
@@ -171,7 +168,7 @@ class Permissions extends Component {
         //send a message to the faucet to fund the new account
         return RPCClient.remote(host).send('MedRecRemote.GetPermissions', {
           AgentID: '0', //TODO: get the actual agentID TODO return here
-          ViewerGroup: patientState.viewerGroup,
+          ViewerGroup: this.props.viewerGroup,
         });
       })
       .then(result => {
@@ -191,6 +188,13 @@ class Permissions extends Component {
       });
   }
 }
+Permissions = connect((state) => {
+  return {
+    relationshipAcc: state.patientReducer.relationshipAcc,
+    viewerGroup: state.patientReducer.viewerGroup,
+  };
+})(Permissions);
+
 
 class Viewers extends Component {
   constructor () {
@@ -208,7 +212,7 @@ class Viewers extends Component {
   }
   addViewer (event) {
     event.preventDefault();
-    let patientState =  store.getState().patientReducer;
+
     let accounts;
     let relationship;
     let providerAddr;
@@ -219,7 +223,7 @@ class Viewers extends Component {
         return Ethereum.getRelationship();
       })
       .then(relationGenerator => {
-        relationship = relationGenerator.at(patientState.relationshipAcc);
+        relationship = relationGenerator.at(this.props.relationshipAcc);
         return relationship.providerAddr();
       })
       .then(encryptedAddr => {
@@ -265,23 +269,22 @@ class Viewers extends Component {
     this.setState(state);
   }
   selectViewer (event) {
-    store.dispatch({type: SET_VIEWER, viewerGroup: event.target.value});
+    this.props.dispatch({type: SET_VIEWER, viewerGroup: event.target.value});
     this.update();
   }
   render () {
-    let patientState =  store.getState().patientReducer;
 
     let viewers = [];
-    if(patientState.relationshipAcc == undefined) {
+    if(this.props.relationshipAcc == undefined) {
       return (<div></div>);
     }
 
-    if(patientState.relationshipAcc !== undefined) {
+    if(this.props.relationshipAcc !== undefined) {
       for(let i = 0; i < this.state.viewerNames.length; i ++) {
         viewers.push(
           <div className="tab" key={i}>
             <span><input type="radio"
-              checked={i == patientState.viewerGroup}
+              checked={i == this.props.viewerGroup}
               onChange={this.selectViewer}
               value={i}></input>
             <strong>Name</strong> {this.state.viewerNames[i]}
@@ -320,15 +323,17 @@ class Viewers extends Component {
   componentDidMount () {
     this.update();
   }
+  componentDidUpdate (nextProps) {
+    this.update();
+  }
   update () {
-    let patientState =  store.getState().patientReducer;
-    if(patientState.relationshipAcc == undefined)return;
+    if(this.props.relationshipAcc == undefined)return;
 
     let relationship;
     let viewerAccounts;
     Ethereum.getRelationship()
       .then(relationGenerator => {
-        relationship = relationGenerator.at(patientState.relationshipAcc);
+        relationship = relationGenerator.at(this.props.relationshipAcc);
         return relationship.getNumViewerGroups();
       })
       .then(numViewers => {
@@ -350,6 +355,12 @@ class Viewers extends Component {
       });
   }
 }
+Viewers = connect((state) => {
+  return {
+    relationshipAcc: state.patientReducer.relationshipAcc,
+    viewerGroup: state.patientReducer.viewerGroup,
+  };
+})(Viewers);
 
 class Relationships extends Component {
   constructor () {
@@ -436,8 +447,8 @@ class Relationships extends Component {
     this.setState(state);
   }
   selectRelationship (event) {
-    store.dispatch({type: SET_VIEWER, viewerGroup: null});
-    store.dispatch({type: SET_RELATIONSHIP, relationshipAcc: event.target.value});
+    this.props.dispatch({type: SET_VIEWER, viewerGroup: null});
+    this.props.dispatch({type: SET_RELATIONSHIP, relationshipAcc: event.target.value});
     this.update();
   }
   render () {
@@ -445,14 +456,14 @@ class Relationships extends Component {
     if(this.props.status == true) {
       return (<div></div>);
     }
-    let patientState = store.getState().patientReducer;
+
     for(let i = 0; i < this.state.providerNames.length; i ++) {
       relationships.push((
         <div className="tab" key={i}>
           <span>
             <input type="radio"
               checked={this.state.relationshipAccounts[i]
-                .localeCompare(patientState.relationshipAcc) === 0}
+                .localeCompare(this.props.relationshipAcc) === 0}
               onChange={this.selectRelationship}
               value={this.state.relationshipAccounts[i]}/>
             {this.state.providerNames[i]}
@@ -489,13 +500,18 @@ class Relationships extends Component {
   componentDidMount () {
     this.update();
   }
+  componentDidUpdate (nextProps) {
+    this.update();
+  }
   update () {
+    if(this.props.status)return;
+
     let accounts;
     let agent;
     let relationGenerator;
     let relationshipAccounts;
     let providerAccounts;
-    return Ethereum.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getAgentRegistry();
@@ -543,6 +559,9 @@ class Relationships extends Component {
       });
   }
 }
+Relationships = connect((state) => {
+  return {relationshipAcc: state.patientReducer.relationshipAcc};
+})(Relationships);
 
 class DeadManSwitch extends Component {
   constructor () {
@@ -611,8 +630,8 @@ class DeadManSwitch extends Component {
     this.setState(state);
   }
   selectRelationship (event) {
-    store.dispatch({type: SET_VIEWER, viewerGroup: null});
-    store.dispatch({type: SET_RELATIONSHIP, relationshipAcc: event.target.value});
+    this.props.dispatch({type: SET_VIEWER, viewerGroup: null});
+    this.props.dispatch({type: SET_RELATIONSHIP, relationshipAcc: event.target.value});
   }
   DMswitch () {
     console.log('Dead Man switch button was clicked today');
@@ -628,7 +647,7 @@ class DeadManSwitch extends Component {
           <span>
             <input type="radio"
               checked={this.state.providerAccounts[i]
-                .localeCompare(store.getState().patientReducer.relationshipAcc) === 0}
+                .localeCompare(this.props.relationshipAcc) === 0}
               onChange={this.selectRelationship}
               value={this.state.providerAccounts[i]}></input>
             <strong>Name</strong> {this.state.providerNames[i]}
@@ -671,21 +690,22 @@ class DeadManSwitch extends Component {
     );
   }
   componentDidMount () {
-    //this.update();
+    this.update();
+  }
+  componentDidUpdate (nextProps) {
+    this.update();
   }
   update () {
+    if(this.props.status)return;
+
     let accounts;
-    let pubKey;
     let agent;
     let relationGenerator;
+    let relationshipAccounts;
     let providerAccounts;
-    return Ethereum.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
-        return Ethereum.convertAddressToPub(accounts[0]);
-      })
-      .then(_pub => {
-        pubKey = _pub;
         return Ethereum.getAgentRegistry();
       })
       .then(reg => reg.deployed())
@@ -708,23 +728,32 @@ class DeadManSwitch extends Component {
         }
         return relationships;
       })
-      .spread((..._provAcc) => {
-        providerAccounts = _provAcc;
-        return providerAccounts.map(account => {
+      .spread((..._rels) => {
+        relationshipAccounts = _rels;
+        return relationshipAccounts.map(account => {
+          return relationGenerator.at(account).providerAddr();
+        });
+      })
+      .spread((..._proAccs) => {
+        return _proAccs.map(name => Ethereum.decrypt(accounts[0], name));
+      })
+      .spread((..._proAccs) => {
+        providerAccounts = _proAccs;
+        return relationshipAccounts.map(account => {
           return relationGenerator.at(account).providerName();
         });
       })
       .spread((...providerNames) => {
-        return providerNames.map(name => {
-          console.log('display name', name, pubKey);
-          return Ethereum.decrypt(pubKey, name);
-        });
+        return providerNames.map(name => Ethereum.decrypt(accounts[0], name));
       })
       .spread((...providerNames) => {
         this.setState({providerNames, providerAccounts});
       });
   }
 }
+DeadManSwitch = connect((state) => {
+  return {relationshipAcc: state.patientReducer.relationshipAcc};
+})(DeadManSwitch);
 
 class MainWindow extends Component {
   render () {

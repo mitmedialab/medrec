@@ -14,6 +14,7 @@ let store = createStore(persistReducer(persistOptions, combineReducers({
   patientReducer,
 })));
 let persistor = persistStore(store);
-export {store, persistor};
 
-//TODO remove all references to react-redux.connect and just import the state from here
+//where possible react-redux is used to provide the store
+//but in some places this isn't possible so the state is imported from this file
+export {store, persistor};

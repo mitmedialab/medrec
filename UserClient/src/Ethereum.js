@@ -13,7 +13,6 @@ import agentRegistryJson from '../../SmartContracts/build/contracts/AgentRegistr
 import relationshipJson from '../../SmartContracts/build/contracts/Relationship.json';
 import Transaction from 'ethereumjs-tx';
 import Utils from 'ethereumjs-util';
-import bitcore from 'bitcore-lib';
 import ecies from 'eth-ecies';
 import {store} from './reduxStore';
 import RPCClient from './RPCClient';

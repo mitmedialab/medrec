@@ -21,21 +21,18 @@ class Home extends Component {
     console.log('Creating Agent contract, please wait.....');
     event.preventDefault();
     if(this.state.hasAgent)return;
-    let accounts;
     let host;
     let agentRegContract;
     Ethereum.getAgentRegistry()
       .then(reg => reg.deployed()).then(_regContract => {
         agentRegContract = _regContract;
         //get the current set of ethereum account
-        return Ethereum.getAccounts();
-      }).then(_acc => {
-        accounts = _acc;
         return agentRegContract.getAgentHost(this.state.sponsor);
       }).then(_host => {
         host = _host;
         //send a message to the faucet to fund the new account
-        return RPCClient.remote(host).send('MedRecRemote.PatientFaucet', {Account: this.state.sponsor});
+        return RPCClient.remote(host)
+          .send('MedRecRemote.PatientFaucet', {Account: this.state.sponsor});
       })
       //wait for the funding transaction to go through
       .then(faucetRes => Ethereum.waitForTx(faucetRes.Txid))
@@ -78,9 +75,11 @@ class Home extends Component {
       firstTimeSection = (
         <div>
           <h2>First time account setup</h2>
-          <p>Give this unique account to your provider to initialize your account in the MedRec Network</p>
+          <p>Give this unique account to your provider to initialize your account
+            in the MedRec Network</p>
           {this.state.mainAccount}
-          <p>When your provider tells you, continue by submitting your sponsor provider&#39; s account below</p>
+          <p>When your provider tells you, continue by submitting your sponsor
+            provider&#39; s account below</p>
           <form>
             <label>
               <span>sponsor</span>
@@ -100,7 +99,9 @@ class Home extends Component {
             Single Use Account ID &nbsp;
             <span className="tooltip">
                 ?
-              <span className="tooltiptext">MedRec protects your privacy by allowing you to generate a unique account id for every relationship. There is no limit to how many can be generated. Never reuse an account id.</span>
+              <span className="tooltiptext">MedRec protects your privacy by
+                 allowing you to generate a unique account id for every relationship.
+                 There is no limit to how many can be generated. Never reuse an account id.</span>
             </span>
           </h2>
           <button onClick={this.generateAccount}>Generate</button>

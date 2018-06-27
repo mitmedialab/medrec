@@ -1,15 +1,13 @@
 import React, {Component} from 'react';
 import { PersistGate } from 'redux-persist/es/integration/react';
-import {Provider as ReduxProvider} from 'react-redux';
 import {render as renderDOM} from 'react-dom';
+import {Provider as ReduxProvider} from 'react-redux';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import {store, persistor} from './reduxStore';
 import Patient from './patient/Patient';
 import Provider from './provider/Provider';
 import Home from './home/Home';
 import Ethereum from './Ethereum';
-
-window.Ethereum = Ethereum;
 
 class InitialLoad extends Component {
   constructor () {
@@ -39,7 +37,6 @@ renderDOM(
   <PersistGate persistor={persistor}>
     <InitialLoad>
       <ReduxProvider store={store}>
-        {/*<Header/>*/}
         <BrowserRouter>
           <Switch>
             <Route path="/patient" component={Patient}/>
@@ -47,7 +44,6 @@ renderDOM(
             <Route path="/" component={Home}/>
           </Switch>
         </BrowserRouter>
-        {/*<Footer/>*/}
       </ReduxProvider>
     </InitialLoad>
   </PersistGate>,

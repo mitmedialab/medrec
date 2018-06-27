@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import {Route, Link, Switch} from 'react-router-dom';
 import RPCClient from '../RPCClient';
-import {connect} from 'react-redux';
-
 import Home from './views/Home';
 import PatientList from './views/PatientList';
-import DropDownMenu from './DropDownMenu';
+import DropDownMenu from '../DropDownMenu';
+import {connect} from 'react-redux';
 
 class Provider extends Component {
 

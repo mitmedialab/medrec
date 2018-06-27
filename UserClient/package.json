@@ -30,7 +30,6 @@
     "react": "^16.0.0",
     "react-dev-utils": "^4.2.1",
     "react-dom": "^16.0.0",
-    "react-redux": "^5.0.6",
     "react-router-dom": "^4.2.2",
     "react-toggle-switch": "^3.0.4",
     "react-vis-force": "^0.3.1",

@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
 import Home from './views/Home';
 import Network from './views/Network';
 import Relationships from './views/Relationships';
-import DropDownMenu from './DropDownMenu';
+import DropDownMenu from '../DropDownMenu';
 
 class Patient extends Component {
 
