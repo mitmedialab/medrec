@@ -1,13 +1,14 @@
 package main
 
 import (
-	"./DatabaseManager"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
+
+	"./DatabaseManager"
+	"./DatabaseManager/common"
 )
 
 var offButton chan bool
@@ -21,17 +22,11 @@ func runDatabaseManager() {
 func runEthereumClient() {
 	//assign a common group id to the child processes
 	ethClient.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	ethStdErr, _ := ethClient.StderrPipe()
 	//start the ethereum client
-	ethClient.Start()
-
-	//continuously read and print error output
-	slurp, _ := ioutil.ReadAll(ethStdErr)
-	err := ethClient.Wait()
+	err := ethClient.Run()
 	if err != nil {
 		log.Print("Ethereum client Exited")
-		log.Println(err)
-		log.Print(string(slurp))
+		log.Println(ethClient.Args)
 	}
 	offButton <- true
 }
@@ -52,7 +47,9 @@ func runUserClient() {
 
 func main() {
 	offButton := make(chan bool)
-	ethClient = exec.Command("./node", "EthereumClient/main.js")
+	ethClient = common.NodeExec("./GolangJSHelpers/startGeth.js")
+	ethClient.Stdout = os.Stdout
+	ethClient.Stderr = os.Stderr
 	userClient = exec.Command("UserClient/node_modules/electron-prebuilt/cli.js", "UserClient/electron-starter.js")
 
 	if len(os.Args) > 1 {

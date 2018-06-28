@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
 import {Route, Link, Switch} from 'react-router-dom';
 import RPCClient from '../RPCClient';
-import {connect} from 'react-redux';
-
 import Home from './views/Home';
 import PatientList from './views/PatientList';
-import EditPatient from './views/EditPatient';
-import DropDownMenu from './DropDownMenu';
+import DropDownMenu from '../DropDownMenu';
+import {connect} from 'react-redux';
 
 class Provider extends Component {
 
@@ -49,16 +47,11 @@ class Provider extends Component {
               <button className="buttonList">Patient List
               </button>
             </Link>
-            <Link to="/provider/editPatient">
-              <button className="buttonEdit">Edit patient
-              </button>
-            </Link>
           </div>
         </div>
         <div className="pane">
           <Switch>
             <Route path="/provider/patientList" component={PatientList}/>
-            <Route path="/provider/editPatient" component={EditPatient}/>
             <Route component={Home}/>
           </Switch>
         </div>

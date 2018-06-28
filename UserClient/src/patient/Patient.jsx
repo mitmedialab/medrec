@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
 import Home from './views/Home';
 import Network from './views/Network';
 import Relationships from './views/Relationships';
-import DropDownMenu from './DropDownMenu';
+import DropDownMenu from '../DropDownMenu';
 
 class Patient extends Component {
 
@@ -58,7 +58,9 @@ class Patient extends Component {
         <div>
           <Route path="/patient/home" component={Home}/>
           <Route path="/patient/network" component={Network}/>
-          <Route path="/patient/relationships" render={(props) => (<Relationships contract={this.props.contract} {...props} />)} />
+          <Route path="/patient/relationships" render={(props) => (
+            <Relationships contract={this.props.contract} {...props} />
+          )} />
         </div>
       </div>
     );

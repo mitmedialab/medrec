@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import {connect} from 'react-redux';
 import Ethereum from '../../Ethereum';
 import RPCClient from '../../RPCClient';
+import {connect} from 'react-redux';
 import {SET_RELATIONSHIP, SET_VIEWER} from '../../constants';
 
 class Permissions extends Component {
@@ -22,18 +22,23 @@ class Permissions extends Component {
   }
   addPermission (event) {
     event.preventDefault();
+
     let accounts;
     let relationship;
     let providerAddr;
-    return Ethereum.web3.eth.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getRelationship();
       })
       .then(relationGenerator => {
         relationship = relationGenerator.at(this.props.relationshipAcc);
-        return relationship.provider();
-      }).then(_provAddr => {
+        return relationship.providerAddr();
+      })
+      .then(encryptedAddr => {
+        return Ethereum.decrypt(accounts[0], encryptedAddr);
+      })
+      .then(_provAddr => {
         providerAddr = _provAddr;
         return Ethereum.getAgentRegistry();
       })
@@ -56,7 +61,7 @@ class Permissions extends Component {
           permissionWrite: false,
           permissionDuration: '',
         });
-        this.update(this.props);
+        this.update();
       })
       .catch((err) => {
         console.log(err);
@@ -80,7 +85,7 @@ class Permissions extends Component {
         state[event.target.id] = event.target.value;
     }
     this.setState(state);
-    this.update(this.props);
+    this.update();
   }
   render () {
     if(this.props.viewerGroup == undefined) {
@@ -123,56 +128,37 @@ class Permissions extends Component {
                 value={this.state.permissionDuration}/>
               <span>days</span>
             </label>
-            <button className="buttonStyle" type="submit">Create</button>
+            <button className="buttonStyle" type="submit">Add</button>
           </form>
         </div>
       </div>
     );
   }
   componentDidMount () {
-    let accounts;
-    let relationship;
-    let providerAddr;
-    Ethereum.web3.eth.getAccounts()
-      .then(_acc => {
-        accounts = _acc;
-        return Ethereum.getRelationship();
-      })
-      .then(relationGenerator => {
-        relationship = relationGenerator.at(this.props.relationshipAcc);
-        return relationship.provider();
-      }).then(_provAddr => {
-        providerAddr = _provAddr;
-        return Ethereum.getAgentRegistry();
-      })
-      .then(reg => reg.deployed())
-      .then(agentRegistry => agentRegistry.getAgentHost(providerAddr))
-      .then(host => {
-        //send a message to the faucet to fund the new account
-        return RPCClient.remote(host).send('MedRecRemote.Faucet', {Account: accounts[0]});
-      });
+    this.update();
+  }
+  componentDidUpdate (nextProps) {
+    this.update();
+  }
+  update () {
+    if(this.props.viewerGroup == undefined)return;
 
-    this.update(this.props);
-  }
-  componentWillReceiveProps (nextProps) {
-    this.update(nextProps);
-  }
-  update (props) {
-    if(props.viewerGroup == undefined) {
-      return;
-    }
     let accounts;
     let relationship;
     let providerAddr;
-    Ethereum.web3.eth.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getRelationship();
       })
       .then(relationGenerator => {
         relationship = relationGenerator.at(this.props.relationshipAcc);
-        return relationship.provider();
-      }).then(_provAddr => {
+        return relationship.providerAddr();
+      })
+      .then(encryptedAddr => {
+        return Ethereum.decrypt(accounts[0], encryptedAddr);
+      })
+      .then(_provAddr => {
         providerAddr = _provAddr;
         return Ethereum.getAgentRegistry();
       })
@@ -181,7 +167,7 @@ class Permissions extends Component {
       .then(host => {
         //send a message to the faucet to fund the new account
         return RPCClient.remote(host).send('MedRecRemote.GetPermissions', {
-          AgentID: '0', //TODO: get the actual agentID
+          AgentID: '0', //TODO: get the actual agentID TODO return here
           ViewerGroup: this.props.viewerGroup,
         });
       })
@@ -208,6 +194,8 @@ Permissions = connect((state) => {
     viewerGroup: state.patientReducer.viewerGroup,
   };
 })(Permissions);
+
+
 class Viewers extends Component {
   constructor () {
     super();
@@ -224,18 +212,24 @@ class Viewers extends Component {
   }
   addViewer (event) {
     event.preventDefault();
+
     let accounts;
     let relationship;
     let providerAddr;
-    return Ethereum.web3.eth.getAccounts()
+    let reEncryptedAddr;
+    return Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getRelationship();
       })
       .then(relationGenerator => {
         relationship = relationGenerator.at(this.props.relationshipAcc);
-        return relationship.provider();
-      }).then(_provAddr => {
+        return relationship.providerAddr();
+      })
+      .then(encryptedAddr => {
+        return Ethereum.decrypt(accounts[0], encryptedAddr);
+      })
+      .then(_provAddr => {
         providerAddr = _provAddr;
         return Ethereum.getAgentRegistry();
       })
@@ -243,25 +237,31 @@ class Viewers extends Component {
       .then(agentRegistry => agentRegistry.getAgentHost(providerAddr))
       .then(host => {
         //send a message to the faucet to fund the new account
-        return RPCClient.remote(host).send('MedRecRemote.Faucet', {Account: accounts[0]});
+        return RPCClient.remote(host).send('MedRecRemote.PatientFaucet', {Account: providerAddr});
       })
       .then(faucetRes => {
-        //wait for the funding transaction to go through
+      //wait for the funding transaction to go through
         return Ethereum.waitForTx(faucetRes.Txid);
       })
-      .then( () => {
-        return Ethereum.getRelationship();
+      .then(() => relationship.addViewerGroup())
+      .then(() => {
+        let pubKey = this.state.viewerAccount.split(':')[0];
+        return Ethereum.encrypt(pubKey, providerAddr);
       })
-      .then(relationGenerator => {
-        relationship = relationGenerator.at(this.props.relationshipAcc);
-        return relationship.addViewerGroup();
-      }).then(() => {
+      .then(_enc => {
+        reEncryptedAddr = _enc;
+        return Ethereum.convertPubToAddress(this.state.viewerAccount.split(':')[0]);
+      })
+      .then(address => {
         return relationship
-          .addViewer(this.state.viewerName, this.state.viewerAccounts.length, this.state.viewerAccount);
+          .addViewer(
+            this.state.viewerName, this.state.viewerAccounts.length,
+            '0x' + address, reEncryptedAddr
+          );
       }).then((viewerRes) => {
         this.setState({viewerName: '', viewerAccount: ''});
         return Ethereum.waitForTx(viewerRes.tx);
-      }).then(this.update.bind(this));
+      }).then(this.update);
   }
   changeFieldById (event) {
     let state = this.state;
@@ -270,10 +270,12 @@ class Viewers extends Component {
   }
   selectViewer (event) {
     this.props.dispatch({type: SET_VIEWER, viewerGroup: event.target.value});
+    this.update();
   }
   render () {
+
     let viewers = [];
-    if(this.props.status == true) {
+    if(this.props.relationshipAcc == undefined) {
       return (<div></div>);
     }
 
@@ -312,28 +314,26 @@ class Viewers extends Component {
               <input id="viewerAccount" onChange={this.changeFieldById}
                 value={this.state.viewerAccount} placeholder="Enter account"/>
             </label>
-            <button className="buttonStyle"  type="submit">Create</button>
+            <button className="buttonStyle"  type="submit">Add</button>
           </form>
         </div>
       </div>
     );
   }
   componentDidMount () {
-    this.update(this.props);
+    this.update();
   }
-  componentWillReceiveProps (nextProps) {
-    this.update(nextProps);
+  componentDidUpdate (nextProps) {
+    this.update();
   }
-  update (props) {
-    if(props.relationshipAcc == undefined) {
-      return;
-    }
+  update () {
+    if(this.props.relationshipAcc == undefined)return;
 
     let relationship;
     let viewerAccounts;
     Ethereum.getRelationship()
       .then(relationGenerator => {
-        relationship = relationGenerator.at(props.relationshipAcc);
+        relationship = relationGenerator.at(this.props.relationshipAcc);
         return relationship.getNumViewerGroups();
       })
       .then(numViewers => {
@@ -344,10 +344,11 @@ class Viewers extends Component {
         return viewers;
       })
       .spread((..._viewAcc) => {
-        viewerAccounts = _viewAcc;
-        let names = viewerAccounts.map(account => {
-          return relationship.getViewerName(account);
-        });
+        viewerAccounts = _viewAcc.filter(account => account.localeCompare('0x') !== 0);
+        let names = viewerAccounts
+          .map(account => {
+            return relationship.getViewerName(account);
+          });
         return names;
       }).spread((...viewerNames) => {
         this.setState({viewerNames, viewerAccounts});
@@ -367,6 +368,7 @@ class Relationships extends Component {
     this.state = {
       providerNames: '',
       providerAccounts: '',
+      relationshipAccounts: '',
       providerAccount: '',
       providerName: '',
     };
@@ -380,11 +382,17 @@ class Relationships extends Component {
     let agent;
     let agentRegistry;
     let relationship;
+    let relationGenerator;
     let accounts;
-
-    Ethereum.web3.eth.getAccounts()
+    let mainAccountPubKey;
+    let host;
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
+        return Ethereum.convertAddressToPub(accounts[0]);
+      })
+      .then(_pubKey => {
+        mainAccountPubKey = _pubKey;
         return Ethereum.getAgentRegistry();
       })
       .then(reg => reg.deployed())
@@ -397,23 +405,31 @@ class Relationships extends Component {
           .then(agentContract => agentContract.at(agentAddress));
       }).then(_agent => {
         agent = _agent;
-        window.agent = _agent;
         return agentRegistry.getAgentHost(this.state.providerAccount);
       })
-      .then(host => RPCClient.remote(host)
-        .send('MedRecRemote.Faucet', {Account: accounts[0]})
-      )
+      .then(_host => {
+        host = _host;
+        return RPCClient.remote(host)
+          .send('MedRecRemote.PatientFaucet', {Account: this.state.providerAccount});
+      })
       .then(faucetRes => {
-        //wait for the funding transaction to go through
+      //wait for the funding transaction to go through
         return Ethereum.waitForTx(faucetRes.Txid);
       })
-      .then( () => Ethereum.getRelationship())
-      .then(relationGenerator => relationGenerator.new(this.state.providerAccount))
+      .then(() => {
+        return Ethereum.getRelationship();
+      })
+      .then(_gen => {
+        relationGenerator = _gen;
+        return RPCClient.remote(host)
+          .send('MedRecRemote.GetProviderAccount');
+      }).then(provAccountRes =>  relationGenerator.new(provAccountRes.Account))
       .then(_relate => {
         relationship = _relate;
-        //TODO: don't store this in plaintext
-        return relationship.setProviderName(this.state.providerName);
-      })
+        return Ethereum.encrypt(mainAccountPubKey, this.state.providerName);
+      }).then(encryptedName => relationship.setProviderName(encryptedName))
+      .then(() => Ethereum.encrypt(mainAccountPubKey, this.state.providerAccount))
+      .then(encryptedProvider => relationship.setProviderAddress(encryptedProvider))
       .then(() => {
         return agent.addRelationship(relationship.address);
       })
@@ -433,25 +449,25 @@ class Relationships extends Component {
   selectRelationship (event) {
     this.props.dispatch({type: SET_VIEWER, viewerGroup: null});
     this.props.dispatch({type: SET_RELATIONSHIP, relationshipAcc: event.target.value});
+    this.update();
   }
   render () {
     let relationships = [];
-    console.log(this.state);
     if(this.props.status == true) {
       return (<div></div>);
     }
+
     for(let i = 0; i < this.state.providerNames.length; i ++) {
       relationships.push((
         <div className="tab" key={i}>
           <span>
             <input type="radio"
-              checked={this.state.providerAccounts[i]
+              checked={this.state.relationshipAccounts[i]
                 .localeCompare(this.props.relationshipAcc) === 0}
               onChange={this.selectRelationship}
-              value={this.state.providerAccounts[i]}></input>
-            <strong>Name</strong> {this.state.providerNames[i]}
+              value={this.state.relationshipAccounts[i]}/>
+            {this.state.providerNames[i]}
           </span>
-          <span><strong>Account</strong>{this.state.providerAccounts[i]}</span>
         </div>
       ));
     }
@@ -484,12 +500,18 @@ class Relationships extends Component {
   componentDidMount () {
     this.update();
   }
+  componentDidUpdate (nextProps) {
+    this.update();
+  }
   update () {
+    if(this.props.status)return;
+
     let accounts;
     let agent;
     let relationGenerator;
+    let relationshipAccounts;
     let providerAccounts;
-    return Ethereum.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getAgentRegistry();
@@ -497,7 +519,6 @@ class Relationships extends Component {
       .then(reg => reg.deployed())
       .then(agentRegistry => agentRegistry.getAgentContractAddr(accounts[0]))
       .then(agentAddress => {
-        console.log('agentAddress', agentAddress);
         return Ethereum.getAgent()
           .then(agentContract => agentContract.at(agentAddress));
       }).then(_agent => {
@@ -513,16 +534,28 @@ class Relationships extends Component {
         for(let i = 0; i < numRelationships.toNumber(); i++) {
           relationships.push(agent.relationships(i));
         }
-        console.log('here with relationships');
         return relationships;
       })
-      .spread((..._provAcc) => {
-        providerAccounts = _provAcc;
-        return providerAccounts.map(account => {
+      .spread((..._rels) => {
+        relationshipAccounts = _rels;
+        return relationshipAccounts.map(account => {
+          return relationGenerator.at(account).providerAddr();
+        });
+      })
+      .spread((..._proAccs) => {
+        return _proAccs.map(name => Ethereum.decrypt(accounts[0], name));
+      })
+      .spread((..._proAccs) => {
+        providerAccounts = _proAccs;
+        return relationshipAccounts.map(account => {
           return relationGenerator.at(account).providerName();
         });
-      }).spread((...providerNames) => {
-        this.setState({providerNames, providerAccounts});
+      })
+      .spread((...providerNames) => {
+        return providerNames.map(name => Ethereum.decrypt(accounts[0], name));
+      })
+      .spread((...providerNames) => {
+        this.setState({providerNames, providerAccounts, relationshipAccounts});
       });
   }
 }
@@ -552,7 +585,7 @@ class DeadManSwitch extends Component {
     let relationship;
     let accounts;
 
-    Ethereum.web3.eth.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getAgentRegistry();
@@ -570,7 +603,7 @@ class DeadManSwitch extends Component {
         return agentRegistry.getAgentHost(this.state.providerAccount);
       })
       .then(host => RPCClient.remote(host)
-        .send('MedRecRemote.Faucet', {Account: accounts[0]})
+        .send('MedRecRemote.PatientFaucet', {Account: this.state.providerAccount})
       )
       .then(faucetRes => {
         //wait for the funding transaction to go through
@@ -605,7 +638,6 @@ class DeadManSwitch extends Component {
   }
   render () {
     let relationships = [];
-    console.log(this.state);
     if(this.props.status == true) {
       return (<div></div>);
     }
@@ -629,7 +661,8 @@ class DeadManSwitch extends Component {
       <div className="DMswitch">
         <div className="settingsColumn">
           <button className="DMbutton" onClick={this.DMswitch}>Click this once per day</button>
-          <p>If you fail to click this button every day, the Dead Man Switch contract will be activated.</p>
+          <p>If you fail to click this button every day, the Dead Man Switch contract
+            will be activated.</p>
         </div>
         <div className="settingsColumn">
           <div className="header">
@@ -649,7 +682,7 @@ class DeadManSwitch extends Component {
                 <input id="providerAccount" onChange={this.changeFieldById}
                   value={this.state.providerAccount} placeholder="Enter Provider Identifier"/>
               </label>
-              <button className="buttonStyle" type="submit"> Create </button>
+              <button className="buttonStyle" type="submit"> Add </button>
             </form>
           </div>
         </div>
@@ -659,12 +692,18 @@ class DeadManSwitch extends Component {
   componentDidMount () {
     this.update();
   }
+  componentDidUpdate (nextProps) {
+    this.update();
+  }
   update () {
+    if(this.props.status)return;
+
     let accounts;
     let agent;
     let relationGenerator;
+    let relationshipAccounts;
     let providerAccounts;
-    return Ethereum.getAccounts()
+    Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
         return Ethereum.getAgentRegistry();
@@ -672,7 +711,6 @@ class DeadManSwitch extends Component {
       .then(reg => reg.deployed())
       .then(agentRegistry => agentRegistry.getAgentContractAddr(accounts[0]))
       .then(agentAddress => {
-        console.log('agentAddress', agentAddress);
         return Ethereum.getAgent()
           .then(agentContract => agentContract.at(agentAddress));
       }).then(_agent => {
@@ -688,15 +726,27 @@ class DeadManSwitch extends Component {
         for(let i = 0; i < numRelationships.toNumber(); i++) {
           relationships.push(agent.relationships(i));
         }
-        console.log('here with DeadManSwitch relationships');
         return relationships;
       })
-      .spread((..._provAcc) => {
-        providerAccounts = _provAcc;
-        return providerAccounts.map(account => {
+      .spread((..._rels) => {
+        relationshipAccounts = _rels;
+        return relationshipAccounts.map(account => {
+          return relationGenerator.at(account).providerAddr();
+        });
+      })
+      .spread((..._proAccs) => {
+        return _proAccs.map(name => Ethereum.decrypt(accounts[0], name));
+      })
+      .spread((..._proAccs) => {
+        providerAccounts = _proAccs;
+        return relationshipAccounts.map(account => {
           return relationGenerator.at(account).providerName();
         });
-      }).spread((...providerNames) => {
+      })
+      .spread((...providerNames) => {
+        return providerNames.map(name => Ethereum.decrypt(accounts[0], name));
+      })
+      .spread((...providerNames) => {
         this.setState({providerNames, providerAccounts});
       });
   }

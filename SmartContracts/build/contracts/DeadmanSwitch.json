@@ -328,7 +328,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2197,
+                        "referencedDeclaration": 2199,
                         "src": "331:3:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -384,7 +384,7 @@
                         "name": "revert",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2201,
+                        "referencedDeclaration": 2203,
                         "src": "352:6:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_revert_pure$__$returns$__$",
@@ -466,7 +466,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2197,
+                        "referencedDeclaration": 2199,
                         "src": "422:3:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -934,7 +934,7 @@
                       "name": "now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 2199,
+                      "referencedDeclaration": 2201,
                       "src": "758:3:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1150,7 +1150,7 @@
                       "name": "now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 2199,
+                      "referencedDeclaration": 2201,
                       "src": "919:3:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1451,7 +1451,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2197,
+                        "referencedDeclaration": 2199,
                         "src": "331:3:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -1507,7 +1507,7 @@
                         "name": "revert",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2201,
+                        "referencedDeclaration": 2203,
                         "src": "352:6:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_revert_pure$__$returns$__$",
@@ -1589,7 +1589,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2197,
+                        "referencedDeclaration": 2199,
                         "src": "422:3:4",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -2057,7 +2057,7 @@
                       "name": "now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 2199,
+                      "referencedDeclaration": 2201,
                       "src": "758:3:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -2273,7 +2273,7 @@
                       "name": "now",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 2199,
+                      "referencedDeclaration": 2201,
                       "src": "919:3:4",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -2406,5 +2406,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.0",
-  "updatedAt": "2018-05-08T20:43:26.671Z"
+  "updatedAt": "2018-06-05T05:32:07.939Z"
 }

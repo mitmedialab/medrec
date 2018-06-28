@@ -1,0 +1,19 @@
+ .signout {
+  position: absolute;
+  top: 10vh;
+  right: 0;
+  z-index: 100;
+  /*border: 1px solid;*/
+}
+
+.signout > button.buttonStyle {
+  background: #fff;
+  color: rgba(0,0,0,0.55);
+  text-decoration: underline;
+}
+
+
+.signout > button.buttonStyle:hover {
+  color: rgba(0,0,0,0.85);
+  cursor: pointer;
+}

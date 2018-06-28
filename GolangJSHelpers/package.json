@@ -1,0 +1,14 @@
+{
+  "name": "ethereumclient",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "eth-lightwallet": "^3.0.1",
+    "ethereum-client-binaries": "^1.6.2",
+    "openport": "^0.0.4",
+    "truffle-contract": "^3.0.5",
+    "web3": "^0.20.1"
+  }
+}

@@ -1,87 +1,80 @@
 package remoteRPC
 
 import (
+	"fmt"
 	"log"
-	"strconv"
+	"os"
 	"testing"
-	"encoding/gob"
-	"encoding/hex"
-	"bytes"
+	"time"
 
-	"github.com/ethereum/go-ethereum/rpc"
+	"../common"
+	"../localRPC"
 )
 
-func TestRecover(t *testing.T){
-	rpcClient, err := rpc.Dial("http://localhost:8545")
-	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
+func TestRecover(t *testing.T) {
+
+	type RecoverArgs struct {
+		Time      string
+		Signature string
 	}
 
+	signerAccount := "0xc5b2fe6f6bc85d71f4ae9a335896c9308ec8977c"
 	recoverArgs := &RecoverArgs{
-		MsgHash: "0x7f6c0e5c497ded52462ec18daeb1c94cefa11cd6949ebdb7074b2a32cac13fba",
-      	Signature: "0xd4f70d60a000c5426e10f6e58caf02b7a5c21248dbc0dba47f179d97891a88d12d07d54c69edc24f34ae88722d275f7d198f5de0ffd8897e06979c9b3c36bb6200",
-    }
+		Time:      "1526422718",
+		Signature: "0xe27f440e8520bd9ea447505a3ff42f5220e29f285ac542806aff78ab66f8a95f03d3c5edb809c0b39e4233a3dc2ce71bf6ba61e0783e8abafce8d7fdd815bb711c",
+	}
 
 	type ecRecoverResult struct {
 		data []byte
 	}
 
-	var result map[string]interface{}
-	err = rpcClient.Call(&result, "eth_ecRecover", recoverArgs.MsgHash, recoverArgs.Signature)
-	if err != nil {
-		log.Fatalf("Failed to return ethereum address: %v", err)
+	result, _ := common.ECRecover(recoverArgs.Time, recoverArgs.Signature)
+
+	if result != signerAccount {
+		t.Errorf("ECRecover failed")
 	}
-	buf := bytes.NewBuffer(nil)
-	enc := gob.NewEncoder(buf)
-	enc.Encode(result["data"])
-
-	decodedResult := make([]byte, 20)
-	buf.Read(decodedResult)
-
-	log.Println(result["data"])
-	log.Println(buf.Len())
-	log.Println("0x" + hex.EncodeToString(decodedResult))
-
 }
 
 // TestFaucet requires an ethereum client to be running locally
 //  with rpc enabled on port 8545,
 //  ganache-cli is recommended
 func TestFaucet(t *testing.T) {
-	client := new(MedRecRemote)
+	os.Chdir("../../")
 
-	faucetArgs := &FaucetArgs{
-		Account: "0x000f8fdee72ac11b5c542428b35eed5769c409f0",
-	}
-
-	faucetReply := &FaucetReply{}
-
+	localClient := new(localRPC.MedRecLocal)
+	remoteClient := new(MedRecRemote)
 	//create a connection over json rpc to the ethereum client
-	rpcClient, err := rpc.Dial("http://localhost:8545")
+	rpcClient, _ := common.GetEthereumRPCConn()
+
+	//get a local ethereum address which can be used for testing
+	var accounts []string
+	err := rpcClient.Call(&accounts, "eth_accounts")
 	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
+		log.Fatalf("Failed to get an ethereum account: %v", err)
 	}
 
-	// execute a ftransaction funding the user account with some ether
-	var balance string
-	err = rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account)
-	if err != nil {
-		log.Fatalf("Failed to send transaction: %v", err)
+	//make sure the patient exists in the database
+	addArgs := &localRPC.AddAccountArgs{
+		UniqueID: accounts[0],
 	}
-	balance1, _ := strconv.ParseInt(balance[2:], 16, 64)
+	addReply := &localRPC.AddAccountReply{}
+	localClient.AddAccount(nil, addArgs, addReply)
 
-	client.Faucet(nil, faucetArgs, faucetReply)
-	if faucetReply.Error != "" {
+	//create the arguments to the call to the faucet
+	faucetArgs := &PatientFaucetArgs{
+		Account: accounts[1],
+		Time:    fmt.Sprintf("%d", time.Now().Unix()),
+	}
+	faucetArgs.Signature, _ = common.Sign(faucetArgs.Time, accounts[0])
+
+	faucetReply := &PatientFaucetReply{}
+
+	//request the faucent send some ether
+	err = remoteClient.PatientFaucet(nil, faucetArgs, faucetReply)
+	if faucetReply.Error != "" && faucetReply.Txid != "" {
 		t.Errorf("The Faucet threw an error: %s", faucetReply.Error)
 	}
-
-	err = rpcClient.Call(&balance, "eth_getBalance", faucetArgs.Account)
 	if err != nil {
-		log.Fatalf("Failed to send transaction: %v", err)
-	}
-	balance2, _ := strconv.ParseInt(balance[2:], 16, 64)
-	diff := balance2 - balance1
-	if diff != 9223372036854775807 {
-		t.Errorf("The faucet did not transfer 9223372036854775807 wei, actual: %d", diff)
+		t.Errorf("Faucet failed with error: %v", err)
 	}
 }

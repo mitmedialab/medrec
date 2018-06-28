@@ -14,4 +14,7 @@ let store = createStore(persistReducer(persistOptions, combineReducers({
   patientReducer,
 })));
 let persistor = persistStore(store);
+
+//where possible react-redux is used to provide the store
+//but in some places this isn't possible so the state is imported from this file
 export {store, persistor};

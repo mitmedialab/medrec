@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import {connect} from 'react-redux';
 import Switch from 'react-toggle-switch';
 import RPCClient from '../RPCClient';
 import Ethereum from '../Ethereum';
 import './home.css';
 import {SET_USER} from '../constants';
 import classnames from 'classnames';
+import {store} from '../reduxStore.js';
 
 class Home extends Component {
   constructor (props) {
@@ -18,7 +18,6 @@ class Home extends Component {
       lname: '',
       username: '',
       password: '',
-      agentID: '',
       seed: '',
       mode: 'patient',
       switched: false,
@@ -28,7 +27,6 @@ class Home extends Component {
       enablePreviewModal: false,
       confirmSeed: '',
       confirmSeedError: '',
-      sponsor: '',
       contract: 'agent',
       preview: 'agent',
     };
@@ -77,11 +75,26 @@ class Home extends Component {
 
   createAgent (event) {
     event.preventDefault();
+    store.dispatch({
+      type: SET_USER,
+      username: this.state.username,
+      password: this.state.password,
+      contract: this.state.contract,
+    });
     Ethereum.generateVault(this.state.password)
+      .then(() => {
+        let addr = Ethereum.vault.getAddresses()[0];
+        var secretKey = Ethereum.vault.exportPrivateKey(addr, Ethereum.pwDerivedKey);
+        return Ethereum.web3.personal.importRawKey(secretKey, this.state.password);
+      })
+      .then(() => {
+        return RPCClient.send('MedRecLocal.SetWalletPassword', {
+          WalletPassword: this.state.password,
+        });
+      })
       .then(() => Ethereum.getSeed(this.state.password))
       .then((seed) => {
         //shows seed to user
-        /*eslint max-len: ["error", { "code": 200 }]*/
         this.setState({
           seed: seed,
           enableModal: true,
@@ -91,6 +104,8 @@ class Home extends Component {
   }
 
   changeFieldById (event) {
+    //TODO: add a step to check that when the username is changed it doesn't conflict
+    //TODO: with another username
     let state = this.state;
     state[event.target.id] = event.target.value;
     this.setState(state);
@@ -121,16 +136,7 @@ class Home extends Component {
       return;
     }
 
-    this.setState({
-      enableConfirmModal: false,
-      enableModal: false,
-      confirmSeed: '',
-      confirmSeedError: '',
-    });
     //update the local database with the new user
-
-    let agentRegContract;
-    let accounts;
     RPCClient.send('MedRecLocal.NewUser', {
       FirstName: this.state.fname,
       LastName: this.state.lname,
@@ -142,67 +148,26 @@ class Home extends Component {
       if(res.Error !== '') {
         throw (res.Error);
       }
-      return Ethereum.getAgentRegistry();
-    }).then(reg => reg.deployed())
-      .then(_regContract => {
-        agentRegContract = _regContract;
-        //get the current set of ethereum account
-        return Ethereum.web3.eth.getAccounts();
-      }).then(_acc => {
-        accounts = _acc;
-        //instantiate the account and UID in the key/val store
-
-        RPCClient.remote('127.0.0.1').send('MedRecRemote.AddAccount', {
-          Account: accounts[0],
-          AgentID: this.state.agentID,
-        });
-        return agentRegContract.getAgentHost(this.state.sponsor);
-      }).then(host => {
-        //send a message to the faucet to fund the new account
-        return RPCClient.remote(host).send('MedRecRemote.Faucet', {Account: accounts[0]});
-      })
-      .then(faucetRes => {
-        //wait for the funding transaction to go through
-        return Ethereum.waitForTx(faucetRes.Txid);
-      })
-      .then( () => {
-        //create a new agent contract for the user
-        return Ethereum.getAgent();
-      })
-      .then(agent => agent.new())
-      .then((agentContract) => {
-        //register the agent contract in the agent registry
-        return agentRegContract.setAgentContractAddr(agentContract.address);
-      })
-      .then(txResult => {
-        //wait for the registry tx to finish
-        return Ethereum.waitForTx(txResult.tx);
-      })
-      .then(() => {
-        console.log('Agent created and registered');
-        console.log(this.state.contract);
-        this.setState({
-          enableModal: false,
-          enableConfirmModal: false,
-          fname: '',
-          lname: '',
-          username: '',
-          password: '',
-          sponsor: '',
-          agentID: '',
-        });
+      this.setState({
+        enableModal: false,
+        enableConfirmModal: false,
+        fname: '',
+        lname: '',
+        username: '',
+        password: '',
       });
+    });
   }
 
   login () {
     RPCClient.send('MedRecLocal.GetSeed', {
       Username: this.state.loginUser,
       Password: this.state.loginPassword,
-    }).then( (res) => {
+    }, false).then( (res) => {
       if(res.Error !== '') {
-        console.log(res.Error);
+        throw (res.Error);
       }else {
-        this.props.dispatch({
+        store.dispatch({
           type: SET_USER,
           username: this.state.loginUser,
           password: this.state.loginPassword,
@@ -210,10 +175,13 @@ class Home extends Component {
           contract: this.state.contract,
         });
         //update the vault with the new user credentials
-        Ethereum.refreshVault().then(() => {
-          this.props.history.push('/' + this.state.mode + '/home');
-        });
+        return Ethereum.refreshVault();
       }
+    }).then(() => {
+      let addr = Ethereum.vault.getAddresses()[0];
+      return Ethereum.web3.personal.unlockAccount(addr, this.state.password, 0);
+    }).then(() => {
+      this.props.history.push('/' + this.state.mode + '/home');
     });
   }
 
@@ -237,9 +205,13 @@ class Home extends Component {
               {/*{users}*/}
               <div id="loginUserPassContainer">
                 <div id="loginUserPass">
-                  <input className="inputStyle" id="loginUser" onChange={this.changeFieldById} placeholder="username"
+                  <input className="inputStyle" id="loginUser" onChange={this.changeFieldById}
+                    placeholder="username"
                     value={this.state.loginUser}/>
-                  <input className="inputStyle" id="loginPassword" onChange={this.changeFieldById} type="password" placeholder="password" value={this.state.loginPassword}/>
+                  <input className="inputStyle" id="loginPassword" onChange={this.changeFieldById}
+                    type="password"
+                    placeholder="password"
+                    value={this.state.loginPassword}/>
                   <button className="loginStyle" onClick={this.login}>Login</button>
                 </div>
               </div>
@@ -247,32 +219,42 @@ class Home extends Component {
             <div id={contractStyle}>
               <h3>Select contract to be deployed</h3>
               <div>
-                <input type="radio" checked={this.state.contract === 'agent'} value="agent" onChange={this.selectContract}></input>Default
-                <span className="preview" id="agent" onClick={this.enablePreviewModal}>Preview</span>
+                <input type="radio" checked={this.state.contract === 'agent'} value="agent"
+                  onChange={this.selectContract}></input>Default
+                <span className="preview"
+                  id="agent" onClick={this.enablePreviewModal}>Preview</span>
               </div>
               <div>
-                <input type="radio" checked={this.state.contract === 'group'} value="group" onChange={this.selectContract}></input>Group
-                <span className="preview" id="group" onClick={this.enablePreviewModal}>Preview</span>
+                <input type="radio" checked={this.state.contract === 'group'} value="group"
+                  onChange={this.selectContract}></input>Group
+                <span className="preview"
+                  id="group" onClick={this.enablePreviewModal}>Preview</span>
               </div>
               <div>
-                <input type="radio" checked={this.state.contract === 'DMswitch'} value="DMswitch" onChange={this.selectContract}></input>DM Switch
-                <span className="preview" id="DMswitch" onClick={this.enablePreviewModal}>Preview</span>
+                <input type="radio" checked={this.state.contract === 'DMswitch'} value="DMswitch"
+                  onChange={this.selectContract}></input>DM Switch
+                <span className="preview"
+                  id="DMswitch" onClick={this.enablePreviewModal}>Preview</span>
               </div>
             </div>
             <div id={identityStyle}>
               <h3>Create an Identity using the contract</h3>
               <form onSubmit={this.createAgent}>
-                <input className="inputStyle" id="sponsor" placeholder="sponsor's account" onChange={this.changeFieldById} value={this.state.sponsor}/>
+                <input className="inputStyle" id="fname" placeholder="First name"
+                  onChange={this.changeFieldById}
+                  value={this.state.fname}/>
                 <br/>
-                <input className="inputStyle" id="agentID" placeholder="unique ID" onChange={this.changeFieldById} value={this.state.agentID}/>
+                <input className="inputStyle" id="lname" placeholder="Last name"
+                  onChange={this.changeFieldById}
+                  value={this.state.lname}/>
                 <br/>
-                <input className="inputStyle" id="fname" placeholder="First name" onChange={this.changeFieldById} value={this.state.fname}/>
+                <input className="inputStyle" id="username" placeholder="username"
+                  onChange={this.changeFieldById}
+                  value={this.state.username}/>
                 <br/>
-                <input className="inputStyle" id="lname" placeholder="Last name" onChange={this.changeFieldById} value={this.state.lname}/>
-                <br/>
-                <input className="inputStyle" id="username" placeholder="username" onChange={this.changeFieldById} value={this.state.username}/>
-                <br/>
-                <input className="inputStyle" id="password" type="password" placeholder="password" onChange={this.changeFieldById} value={this.state.password}/>
+                <input className="inputStyle" id="password" type="password" placeholder="password"
+                  onChange={this.changeFieldById}
+                  value={this.state.password}/>
                 <button className="loginStyle" type="submit">Create</button>
               </form>
             </div>
@@ -282,7 +264,8 @@ class Home extends Component {
           <div onClick={this.closeModal} className="modalBackground"></div>
           <div className={classnames({modalContent: true, display: this.state.enableSeedModal})}>
             <button className="close" onClick={this.closeModal}></button>
-            <p>The following seed can be used to recover your account, be sure to write it down and keep it somewhere safe.</p>
+            <p>The following seed can be used to recover your account, be sure to write it down
+              and keep it somewhere safe.</p>
             <p className="seed">{this.state.seed}</p>
             <button className="buttonStyle" onClick={this.openConfirmModal}>Next</button>
           </div>
@@ -290,7 +273,8 @@ class Home extends Component {
             <p>{this.state.confirmSeedError}</p>
             <button className="close" onClick={this.closeSeedModal}></button>
             <p>Please reenter your seed, to ensure you copied it correctly.</p>
-            <input className="inputStyle" id="confirmSeed" onChange={this.changeFieldById} value={this.state.confirmSeed}/>
+            <input className="inputStyle" id="confirmSeed" onChange={this.changeFieldById}
+              value={this.state.confirmSeed}/>
             <button className="buttonStyle" onClick={this.finishCreateAgent}>Finish</button>
           </div>
         </div>
@@ -306,4 +290,4 @@ class Home extends Component {
     );
   }
 }
-export default connect()(Home);
+export default Home;

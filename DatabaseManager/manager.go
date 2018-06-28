@@ -1,12 +1,13 @@
 package manager
 
 import (
+	"fmt"
+	"net/http"
+
 	"./ethereum"
 	"./localRPC"
 	"./middleware"
 	"./remoteRPC"
-	"fmt"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
@@ -15,6 +16,8 @@ import (
 func Init() {
 	n := negroni.New()
 	router := mux.NewRouter()
+
+	//two different RPC clients are used to prevent accidental leaks of private functions
 	remoteRPC.ListenandServe(router)
 	localRPC.ListenandServe(router)
 	ethereum.Init()

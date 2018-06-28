@@ -2,12 +2,13 @@ pragma solidity ^0.4.18;
 
 contract Relationship {
     address public patron;
-    address public provider;
-    string public providerName;
+    address public provider; // this is a unique address for the provider used only for this relationship
+    string public providerAddr; //encrypted provider address
+    string public providerName; //encrypted provider name
 
     struct Viewer {
         string name;
-        address addr;
+        string providerAddr; //the real provider address encypted so only the viewer can read
     }
 
     address[][] viewerGroups;
@@ -27,17 +28,21 @@ contract Relationship {
         provider = _provider;
     }
 
-    /****These functions should be left commented out until a use case for them arises
-    function setPatron(address addr) isPatron {
+/****These functions should be left commented out until a use case for them arises
+  function setPatron(address addr) isPatron {
     patron = addr;
-}
-function setProvider(address addr) isPatron {
-provider = addr;
-}
+  }
+  function setProvider(address addr) isPatron {
+    provider = addr;
+  }
 ******************/
 
+function setProviderAddress(string addr) public {
+    providerAddr = addr;
+}
+
 function setProviderName(string name) public {
-    providerName = name;
+  providerName = name;
 }
 
 function addViewerGroup() public isPatron {
@@ -59,12 +64,12 @@ function removeViewerGroup(uint viewerGroup) public isPatron {
     viewerGroups.length -= 1;
 }
 
-function addViewer(string name, uint viewerGroup, address viewer) public isPatron {
+function addViewer(string name, uint viewerGroup, address viewer, string provAddr) public isPatron {
     require(!isViewer[viewer]);
 
     isViewer[viewer] = true;
     viewerGroups[viewerGroup].push(viewer);
-    viewerInfo[viewer] = Viewer(name, viewer);
+    viewerInfo[viewer] = Viewer(name, provAddr);
 }
 
 function removeViewer(uint viewerGroup, address viewer) public isPatron {
