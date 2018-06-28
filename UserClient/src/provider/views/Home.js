@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Ethereum from '../../Ethereum';
-import RPCClient from '../../RPCClient';
 import Promise from 'bluebird';
 import './home.css';
 
@@ -18,22 +17,29 @@ class Home extends Component {
       signerAccounts: [],
       proposalName: '',
       kickAddress: '',
+      primaryAccount: '',
+      futureProposer: '',
     };
     this.proposeSelf = this.proposeSelf.bind(this);
     this.kick = this.kick.bind(this);
     this.changeFieldById = this.changeFieldById.bind(this);
+    this.sponsor = this.sponsor.bind(this);
     this.changeSignerVotes = this.changeSignerVotes.bind(this);
     this.voteForProposedSigner = this.voteForProposedSigner.bind(this);
     this.voteForKickedSigner = this.voteForKickedSigner.bind(this);
   }
+  sponsor (event) {
+    event.preventDefault();
+    Promise.promisify(Ethereum.web3.eth.sendTransaction)({
+      from: this.state.primaryAccount,
+      to: this.state.futureProposer,
+      value: 1e15, //arbitrary amount of eth that should be enough for a provider
+    }).then(txid => Ethereum.waitForTx(txid))
+      .then(() => this.setState({futureProposer: ''}));
+  }
   proposeSelf (event) {
     event.preventDefault();
     Ethereum.getAccounts()
-      .then(accounts => {
-        return RPCClient.remote('127.0.0.1').send('MedRecRemote.Faucet', {Account: accounts[0]});
-      })
-      //wait for the funding transaction to go through
-      .then(faucetRes => Ethereum.waitForTx(faucetRes.Txid))
       .then(() => Ethereum.getAgentRegistry())
       .then(reg => reg.deployed())
       .then(agentRegistry => {
@@ -175,33 +181,49 @@ class Home extends Component {
 
     return  (
       <div className="mainPanel">
+        <h2>Your provider account:</h2>
+        {this.state.primaryAccount}
+        <h2>Sponsor a new Provider</h2>
+        <form onSubmit={this.sponsor}>
+          <label>
+            <input className="inputStyle" id="futureProposer" onChange={this.changeFieldById}
+              value={this.state.futureProposer} placeholder="Address"/>
+          </label>
+          <button className="buttonStyle" type="submit"> Sponsor </button>
+        </form>
         <div id="signersList">
           <h2>Registered Providers</h2>
           The current signers are the following:
           {currentSigners}
         </div>
-        <p>Propose yourself as a provider</p>
-        <form onSubmit={this.proposeSelf}>
-          <label>
-            <input className="inputStyle" id="proposalName" onChange={this.changeFieldById}
-              value={this.state.proposalName} placeholder="Name"/>
-          </label>
-          <button className="buttonStyle" type="submit"> Propose Self </button>
-        </form>
-        <p>Kick a registered provider</p>
-        <form onSubmit={this.kick}>
-          <label>
-            <input className="inputStyle" id="kickAddress" onChange={this.changeFieldById}
-              value={this.state.kickAddress} placeholder="Address" />
-          </label>
-          <button className="buttonStyle" type="submit"> Kick </button>
-        </form>
-        <h2>Proposed Signers</h2>
-        Here is a list of the proposed signers:
-        {proposedSigners}
-        <h2>Kicked Signers</h2>
-        Here is a list of the kicked signers:
-        {kickedSigners}
+        <div id="proposeKickSection">
+          <div>
+            <h2>Propose yourself as a provider</h2>
+            <form onSubmit={this.proposeSelf}>
+              <label>
+                <input className="inputStyle" id="proposalName" onChange={this.changeFieldById}
+                  value={this.state.proposalName} placeholder="Name"/>
+              </label>
+              <button className="buttonStyle" type="submit"> Propose Self </button>
+            </form>
+            <h2>Proposed Signers</h2>
+            Here is a list of the proposed signers:
+            {proposedSigners}
+          </div>
+          <div>
+            <h2>Kick a registered provider</h2>
+            <form onSubmit={this.kick}>
+              <label>
+                <input className="inputStyle" id="kickAddress" onChange={this.changeFieldById}
+                  value={this.state.kickAddress} placeholder="Address" />
+              </label>
+              <button className="buttonStyle" type="submit"> Kick </button>
+            </form>
+            <h2>Kicked Signers</h2>
+            Here is a list of the kicked signers:
+            {kickedSigners}
+          </div>
+        </div>
       </div>
     );
   }
@@ -294,10 +316,18 @@ class Home extends Component {
       });
   }
 
+  updateprimaryAccount () {
+    Ethereum.getAccounts()
+      .then(accounts => {
+        this.setState({primaryAccount: accounts[0]});
+      });
+  }
+
   componentDidMount () {
     this.updateSignersList();
     this.updateProspectivesList();
     this.updateKickedList();
+    this.updateprimaryAccount();
   }
 }
 

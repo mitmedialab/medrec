@@ -28,6 +28,9 @@ let runGeth = (binaryPath) => {
         '--rpc',
         '--rpcapi=eth,miner,personal,net,web3,clique',
         '--rpccorsdomain=*', //TODO: fix this security vulnerability and specify exact domains
+        '--ws',
+        '--wsapi=eth,miner,personal,net,web3,clique',
+        '--wsorigins=*', //TODO: fix this security vulnerability and specify exact domains
         '--port=' + port, '--networkid=633732',
         '--targetgaslimit=10000000000000',
       ]);

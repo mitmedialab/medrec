@@ -8,7 +8,7 @@ import Patient from './patient/Patient';
 import Provider from './provider/Provider';
 import Home from './home/Home';
 import Ethereum from './Ethereum';
-
+window.Ethereum = Ethereum;
 class InitialLoad extends Component {
   constructor () {
     super();

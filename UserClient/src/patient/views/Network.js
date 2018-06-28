@@ -51,7 +51,8 @@ class Network extends Component {
           showLabels
           highlightDependencies
           zoomOptions={{minScale: 1, maxScale: 5}} >
-          {nodes} {links}
+          {nodes}
+          {links}
         </InteractiveForceGraph>
       </div>
     );
@@ -59,7 +60,7 @@ class Network extends Component {
   componentDidMount () {
     this.getProviders().then( () => {
       for(let i = 0; i < this.state.nodes.length; i ++) {
-        this.getViewers(this.state.nodes[i].account, this.state.nodes[i].id);
+        this.getViewers(this.state.nodes[i].relationship, this.state.nodes[i].id);
       }
     });
   }
@@ -67,8 +68,7 @@ class Network extends Component {
     let accounts;
     let agent;
     let relationGenerator;
-    let providerAccounts;
-    let relationships = [];
+    let relationshipAccounts;
     return Ethereum.getAccounts()
       .then(_acc => {
         accounts = _acc;
@@ -88,24 +88,31 @@ class Network extends Component {
         return agent.getNumRelationships();
       })
       .then(numRelationships => {
+        let relationships = [];
         for(let i = 0; i < numRelationships.toNumber(); i++) {
           relationships.push(agent.relationships(i));
         }
         return relationships;
       })
-      .spread((..._provAcc) => {
-        providerAccounts = _provAcc;
-        return providerAccounts.map(account => {
+      .spread((..._rels) => {
+        relationshipAccounts = _rels;
+        return relationshipAccounts.map(account => {
           return relationGenerator.at(account).providerName();
         });
-      }).spread((...providerNames) => {
+      })
+      .spread((...providerNames) => {
+        return providerNames.map(name => Ethereum.decrypt(accounts[0], name));
+      })
+      .spread((...providerNames) => {
+        let nodes = this.state.nodes;
         for(let i = 0; i < providerNames.length; i++) {
-          this.setState({
-            nodes: [
-              ...this.state.nodes,
-              { id: providerNames[i], group: 'provider', account: providerAccounts[i] }],
+          nodes.push({
+            id: providerNames[i],
+            group: 'provider',
+            relationship: relationshipAccounts[i],
           });
         }
+        this.setState({nodes});
       });
   }
   getViewers (providerAccount, providerName) {
@@ -117,31 +124,38 @@ class Network extends Component {
     Ethereum.getRelationship()
       .then(relationGenerator => {
         relationship = relationGenerator.at(providerAccount);
-        return relationship.getNumViewers();
+        return relationship.getNumViewerGroups();
       })
       .then(numViewers => {
         let viewers = [];
         for(let i = 0; i < numViewers.toNumber(); i++) {
-          viewers.push(relationship.viewers(i));
+          viewers.push(relationship.getViewer(i, 0));
         }
         return viewers;
       })
       .spread((..._viewAcc) => {
-        viewerAccounts = _viewAcc;
-        let names = viewerAccounts.map(account => {
-          return relationship.getViewerName(account);
-        });
+        viewerAccounts = _viewAcc.filter(account => account.localeCompare('0x') !== 0);
+        let names = viewerAccounts
+          .map(account => {
+            return relationship.getViewerName(account);
+          });
         return names;
       }).spread((...viewerNames) => {
+        let nodes = this.state.nodes;
+        let links = this.state.links;
         for(let i = 0; i < viewerNames.length; i++) {
-          this.setState({
-            nodes: [
-              ...this.state.nodes,
-              { id: viewerNames[i], group: 'viewer', account: viewerAccounts[i] },
-            ],
-            links: [...this.state.links, { source: viewerNames[i], target: providerName, value: 1}],
+          nodes.push({
+            id: viewerNames[i],
+            group: 'viewer',
+            account: viewerAccounts[i],
+          });
+          links.push({
+            source: viewerNames[i],
+            target: providerName,
+            value: 1,
           });
         }
+        this.setState({nodes, links});
       });
   }
 }

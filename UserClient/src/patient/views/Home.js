@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Tests from './Tests';
+import Ethereum from '../../Ethereum';
 import RPCClient from '../../RPCClient';
 import './home.css';
 

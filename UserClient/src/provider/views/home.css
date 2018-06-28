@@ -85,7 +85,7 @@ button.buttonHome, button.buttonList, button.buttonEdit {
 
 #signersList {
   line-height: 2;
-} 
+}
 
 #signersList > div > span {
   padding-right: 0 2vw;
@@ -96,7 +96,7 @@ button.buttonHome, button.buttonList, button.buttonEdit {
   margin-right: 0.5vw;
   margin-bottom: 1vh;
   border-radius: 3px;
-  width: 150px; 
+  width: 150px;
   padding: 5px 8px;
   position: relative;
   border: 0 solid rgba(0,0,0,0.25);
@@ -175,7 +175,7 @@ table > thead {
   background: rgba(0,0,0,0.05);
   border-radius: 5px;
   color: rgba(0,0,0,0.60);
-  
+
   line-height: 18px;
   font-weight: 400;
 }
@@ -227,17 +227,25 @@ td, tr{
   background: rgba(0,0,0,0.05);
   border-radius: 5px;
   color: rgba(0,0,0,0.60);
-  
+
   line-height: 20px;
   font-weight: 600;
   padding-left: 0.1vw;
 }
 
+div#proposeKickSection {
+  display: flex;
+  justify-content: space-between;
+}
+
+div#proposeKickSection > div {
+  width: 95%;
+}
 
 input#proposalName, input#kickAddress {
   margin: 0 0.3vw;
   border-radius: 3px;
-  width: 150px; 
+  width: 150px;
   padding: 5px 8px;
   position: relative;
   border: 1px solid rgba(0,0,0,0.25);

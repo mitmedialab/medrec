@@ -7,6 +7,7 @@ import ProviderEngine from 'web3-provider-engine';
 import HookedWalletSubprovider from 'web3-provider-engine/subproviders/hooked-wallet.js';
 import NonceSubprovider from 'web3-provider-engine/subproviders/nonce-tracker.js';
 import RpcSubprovider from 'web3-provider-engine/subproviders/rpc.js';
+import WebSocketSubprovider from 'web3-provider-engine/subproviders/websocket.js';
 //import the contracts descriptors
 import agentJson from '../../SmartContracts/build/contracts/Agent.json';
 import agentRegistryJson from '../../SmartContracts/build/contracts/AgentRegistry.json';
@@ -178,10 +179,13 @@ class Ethereum {
       },
     }));
 
-    //data source
+    //data sources
     //this must come as the last component so it doesn't overshadow the wallet
-    this.engine.addProvider(new RpcSubprovider({
-      rpcUrl: 'http://localhost:8545',
+    //this.engine.addProvider(new RpcSubprovider({
+    //rpcUrl: 'http://localhost:8545',
+    //}));
+    this.engine.addProvider(new WebSocketSubprovider({
+      rpcUrl: 'ws://localhost:8546',
     }));
 
     //log new blocks
