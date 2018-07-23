@@ -6,7 +6,7 @@ import ProviderEngine from 'web3-provider-engine';
 //import FilterSubprovider from 'web3-provider-engine/subproviders/filters.js';
 import HookedWalletSubprovider from 'web3-provider-engine/subproviders/hooked-wallet.js';
 import NonceSubprovider from 'web3-provider-engine/subproviders/nonce-tracker.js';
-import RpcSubprovider from 'web3-provider-engine/subproviders/rpc.js';
+//import RpcSubprovider from 'web3-provider-engine/subproviders/rpc.js';
 import WebSocketSubprovider from 'web3-provider-engine/subproviders/websocket.js';
 //import the contracts descriptors
 import agentJson from '../../SmartContracts/build/contracts/Agent.json';
