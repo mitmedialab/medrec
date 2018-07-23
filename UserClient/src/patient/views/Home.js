@@ -136,7 +136,9 @@ class Home extends Component {
         return agentRegistry.getAgentContractAddr(accounts[0]);
       })
       .then(agentAddress => {
-        if(parseInt(agentAddress, 16) != 0) {
+        console.log('agents', agentAddress, parseInt(agentAddress, 16));
+        //NaN and O will both fail this check
+        if(parseInt(agentAddress, 16) > 0) {
           this.setState({
             hasAgent: true,
             agentAddress: agentAddress,

@@ -22,6 +22,7 @@ Install NPM: https://nodejs.org/en/
 
 #### 3. Install npm packages
 
+Setup the UserClient
 ```
 $ cd UserClient
 $ npm install
@@ -35,11 +36,21 @@ To resolve an annoying won't fix bug in the bitcoin-mnemonic library you also ne
 $ rm -r node_modules/bitcore-mnemonic/node_modules/bitcore-lib
 ```
 
+Setup the Javscript helper files
+```
+$ cd GolangJSHelpers
+$ npm install
+$ npm run build
+$ cd ..
+```
+
 #### 4. Setup your MySQL Database
 
 You need to be running a mysql  database instance locally with username:password root:medrecpassword:
 - run query `/scripts/medrec-v1.sql`. It will create a schema called `medrec-v1` for you to store/retrieve information from. It is representing the "remote" DB.
 - run query `/scripts/medrecwebapp.sql` for the "local" DB.
+
+If you do not want to be able to look at the example patient records you can skip this section.
 
 #### 5. Start all of MedRec's components
 
@@ -50,16 +61,13 @@ $ ./medrec UserClient
 ```
 
 ## For Development
+#### 1. Setup a PoA blockchain
 
-#### 1. Install ganache-cli
+Use Goethereum to setup a proof of authority blockchain
 
-Install `ganache-cli`: `npm install ganache-cli -g`
+##### 2. Connect to the blockchain
 
-##### 2. Run current build
-
-```
-`$ ganache-cli --gasLimit=1000000000000 --gasPrice 200 --deterministic --account "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d, 100000000000000000000000000000000"`
-```
+MedRec has to be modified to connect to the provider nodes of this blockchain. Edit the medrec-genesis.json and startGeth.js in GolangJSHelpers/ so that the parameters match with your network.
 
 #### 3. Install Go and golang libraries
 
@@ -99,6 +107,7 @@ You need to be running a mysql  database instance locally with username:password
 It should start the DatabaseManager running on localhost:6337
 
 #### 7. Deploy the contracts
+You will need to install the program truffle using npm to deploy contracts.
 
 In the `SmartContracts` director: `truffle deploy`. The `ganache-cli` should respond to this command showing that the contracts have been deployed.
 

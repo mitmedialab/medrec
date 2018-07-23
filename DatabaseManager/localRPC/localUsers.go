@@ -18,8 +18,6 @@ import (
 )
 
 type SetWalletPasswordArgs struct {
-	Time           string // the current time
-	Signature      string // signature of the current time
 	WalletPassword string //wallet password
 }
 
@@ -27,23 +25,6 @@ type SetWalletPasswordReply struct {
 }
 
 func (client *MedRecLocal) SetWalletPassword(r *http.Request, args *SetWalletPasswordArgs, reply *SetWalletPasswordReply) error {
-	// recoveredAccount, _ := common.ECRecover(args.Time, args.Signature)
-	//
-	// //create a connection over json rpc to the ethereum client
-	// rpcClient, _ := common.GetEthereumRPCConn()
-	//
-	// //get the list of accounts open on the client
-	// var accounts []string
-	// err := rpcClient.Call(&accounts, "eth_accounts")
-	// if err != nil {
-	// 	log.Fatalf("Failed to get the ethereum accounts: %v", err)
-	// }
-	//
-	// if recoveredAccount == accounts[0] {
-	// } else {
-	// 	return errors.New("failed to set wallet password")
-	// }
-
 	common.WalletPassword = args.WalletPassword
 
 	return nil
@@ -279,6 +260,7 @@ type SaveKeystoreArgs struct {
 type SaveKeystoreReply struct {
 }
 
+//TODO this should take a password and check the password matches
 func (client *MedRecLocal) SaveKeystore(r *http.Request, args *SaveKeystoreArgs, reply *SaveKeystoreReply) error {
 	tab := common.InstantiateLookupTable()
 	defer tab.Close()

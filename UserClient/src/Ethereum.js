@@ -181,9 +181,6 @@ class Ethereum {
 
     //data sources
     //this must come as the last component so it doesn't overshadow the wallet
-    //this.engine.addProvider(new RpcSubprovider({
-    //rpcUrl: 'http://localhost:8545',
-    //}));
     this.engine.addProvider(new WebSocketSubprovider({
       rpcUrl: 'ws://localhost:8546',
     }));

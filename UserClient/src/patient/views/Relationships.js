@@ -236,7 +236,7 @@ class Viewers extends Component {
       .then(reg => reg.deployed())
       .then(agentRegistry => agentRegistry.getAgentHost(providerAddr))
       .then(host => {
-        //send a message to the faucet to fund the new account
+      //send a message to the faucet to fund the new account
         return RPCClient.remote(host).send('MedRecRemote.PatientFaucet', {Account: providerAddr});
       })
       .then(faucetRes => {

@@ -13,9 +13,8 @@ cp medrec-amd64 build
 
 #copy the ethereum client starter app
 mkdir build/EthereumClient
-cp EthereumClient/main.js build/EthereumClient/
-cp EthereumClient/clientBinaries.json build/EthereumClient/
-cp -r EthereumClient/node_modules build/EthereumClient/
+cp GolangJSHelpers/* build/GolangJSHelpers/
+cp -r GolangJSHelpers/node_modules build/GolangJSHelpers/
 
 #build the UserClient
 (cd UserClient && npm run build)

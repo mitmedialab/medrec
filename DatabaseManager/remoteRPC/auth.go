@@ -25,7 +25,7 @@ func AuthenticatePatient(msg string, signature string) (string, error) {
 	//fail authentication if the msg is too old
 	msgInt, _ := strconv.ParseInt(msg, 10, 64)
 	elapsedTime := time.Now().Sub(time.Unix(msgInt, 0))
-	if elapsedTime.Minutes() > 10 {
+	if elapsedTime.Seconds() > 10 {
 		return "", errors.New("signature is too old")
 	}
 

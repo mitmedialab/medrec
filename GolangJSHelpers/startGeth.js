@@ -44,7 +44,7 @@ let runGeth = (binaryPath) => {
 };
 
 let initGeth = (binaryPath) => {
-  spawnSync(binaryPath, ['--datadir', home, 'init', 'EthereumClient/medrec-genesis.json']);
+  spawnSync(binaryPath, ['--datadir', home, 'init', 'GolangJSHelpers/medrec-genesis.json']);
   runGeth(binaryPath);
 };
 
