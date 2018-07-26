@@ -36,7 +36,7 @@ To resolve an annoying won't fix bug in the bitcoin-mnemonic library you also ne
 $ rm -r node_modules/bitcore-mnemonic/node_modules/bitcore-lib
 ```
 
-Setup the Javscript helper files
+Setup the Javascript helper files
 ```
 $ cd GolangJSHelpers
 $ npm install
@@ -46,7 +46,7 @@ $ cd ..
 
 #### 4. Setup your MySQL Database
 
-You need to be running a mysql  database instance locally with username:password root:medrecpassword:
+You need to be running a mysql database instance locally with username:password root:medrecpassword:
 - run query `/scripts/medrec-v1.sql`. It will create a schema called `medrec-v1` for you to store/retrieve information from. It is representing the "remote" DB.
 - run query `/scripts/medrecwebapp.sql` for the "local" DB.
 
@@ -98,7 +98,7 @@ $ rm node_modules/bitcore-mnemonic/node_modules/bitcore-lib
 
 #### 6. Run the Database manager
 
-You need to be running a mysql  database instance locally with username:password root:medrecpassword:
+You need to be running a mysql database instance locally with username:password root:medrecpassword:
 - run query `/scripts/medrec-v1.sql`. It will create a schema called `medrec-v1` for you to store/retrieve information from. It is representing the "remote" DB.
 - run query `/scripts/medrecwebapp.sql` for the "local" DB.
 
