@@ -40,7 +40,6 @@ Setup the Javascript helper files
 ```
 $ cd GolangJSHelpers
 $ npm install
-$ npm run build
 $ cd ..
 ```
 
