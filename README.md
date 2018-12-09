@@ -16,6 +16,15 @@ This project is being developed under the GPLv2 LICENSE.
 
 ## For production
 
+### 1. Install golang and build
+
+Install golang from the repositories for your operating system (apt, yum, homebrew, etc.) or from the golang website. https://golang.org/dl/
+
+Then build the go components of medred
+```
+$ go build
+```
+
 #### 2. Install NPM
 
 Install NPM: https://nodejs.org/en/
