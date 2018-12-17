@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"./DatabaseManager"
-	"./DatabaseManager/common"
+	"github.com/mitmedialab/medrec/DatabaseManager"
+	"github.com/mitmedialab/medrec/DatabaseManager/common"
 )
 
 var offButton chan bool

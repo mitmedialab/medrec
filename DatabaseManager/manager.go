@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"./ethereum"
-	"./localRPC"
-	"./middleware"
-	"./remoteRPC"
-
 	"github.com/gorilla/mux"
+	"github.com/mitmedialab/medrec/DatabaseManager/ethereum"
+	"github.com/mitmedialab/medrec/DatabaseManager/localRPC"
+	"github.com/mitmedialab/medrec/DatabaseManager/middleware"
+	"github.com/mitmedialab/medrec/DatabaseManager/remoteRPC"
 	"github.com/urfave/negroni"
 )
 

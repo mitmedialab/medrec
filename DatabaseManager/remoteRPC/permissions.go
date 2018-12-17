@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"../common"
+	"github.com/mitmedialab/medrec/DatabaseManager/common"
 )
 
 type AddPermissionArgs struct {

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"../common"
+	"github.com/mitmedialab/medrec/DatabaseManager/common"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 

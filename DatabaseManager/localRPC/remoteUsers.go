@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"../common"
+	"github.com/mitmedialab/medrec/DatabaseManager/common"
 )
 
 type AddAccountArgs struct {

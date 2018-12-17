@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"../common"
+	"github.com/mitmedialab/medrec/DatabaseManager/common"
 )
 
 // AuthenticateProvider verifies that the provided message was signed by a provider

@@ -11,8 +11,7 @@ import (
 	"net/http"
 	"strings"
 
-	"../common"
-
+	"github.com/mitmedialab/medrec/DatabaseManager/common"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"golang.org/x/crypto/scrypt"
 )

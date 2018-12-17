@@ -1,7 +1,7 @@
 package localRPC
 
 import (
-	"../middleware"
+	"github.com/mitmedialab/medrec/DatabaseManager/middleware"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/rpc/v2"
 	"github.com/gorilla/rpc/v2/json"
