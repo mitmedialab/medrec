@@ -23,6 +23,3 @@ yarn-error.log*
 
 EthereumClient/Geth
 ${HOME}
-
-medrec
-medrec-amd-64
