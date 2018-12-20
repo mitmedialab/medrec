@@ -71,19 +71,19 @@ $ ./medrec UserClient
 ## For Development
 #### 1. Setup a PoA blockchain
 
-Use Goethereum to setup a proof of authority blockchain
+Refer to [this guide](https://hackernoon.com/setup-your-own-private-proof-of-authority-ethereum-network-with-geth-9a0a3750cda8) to setup a proof of authority blockchain with go-ethereum as its backend. Change the RPC port in the above tutorial to `8545` while starting `geth`.
 
 ##### 2. Connect to the blockchain
 
-MedRec has to be modified to connect to the provider nodes of this blockchain. Edit the medrec-genesis.json and startGeth.js in GolangJSHelpers/ so that the parameters match with your network.
+MedRec has to be modified to connect to the provider nodes of this blockchain. Edit medrec-genesis.json and startGeth.js in `GolangJSHelpers/` to match with your genesis and chain parameters of your PoA blockchain.
 
 #### 3. Install Go and golang libraries
 
-Install Go: https://github.com/golang/go or `brew install go`
+Install Go: https://github.com/golang/go or `brew install go` if you're on macOS
 
-and run:
+`cd` into your `GOPATH` and run
 ```
-$ go get
+$ go get -v ./...
 ```
 
 #### 4. Install NPM
@@ -107,17 +107,32 @@ $ rm node_modules/bitcore-mnemonic/node_modules/bitcore-lib
 #### 6. Run the Database manager
 
 You need to be running a mysql database instance locally with username:password root:medrecpassword:
-- run query `/scripts/medrec-v1.sql`. It will create a schema called `medrec-v1` for you to store/retrieve information from. It is representing the "remote" DB.
-- run query `/scripts/medrecwebapp.sql` for the "local" DB.
+```
+create user 'password'@'localhost' identified by 'medrecpassword';
+```
+- run query `/scripts/medrec-v1.sql`:
+```
+mysql -u password -p < medrec-v1.sql
+```
+It will create a schema called `medrec-v1` for you to store/retrieve information from. It is representing the "remote" DB.
+
+- run query `/scripts/medrecwebapp.sql` for the "local" DB:
+```
+mysql -u password -p < medrecwebapp.sql
+```
 
 `$ go run main.go DatabaseManager`
 
 It should start the DatabaseManager running on localhost:6337
 
 #### 7. Deploy the contracts
-You will need to install the program truffle using npm to deploy contracts.
+You will need to install the program truffle using npm to deploy contracts:
+```
+npm install truffle -g
+```
+Make sure that the parameters in `SmartContracts/truffle.js` match your PoA chain.
 
-In the `SmartContracts` director: `truffle deploy`. The `ganache-cli` should respond to this command showing that the contracts have been deployed.
+Then deploy the contract using `truffle deploy`. The `ganache-cli` should respond to this command showing that the contracts have been deployed.
 
 #### 8. Start the UserClient
 

@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"../common"
+	"github.com/mitmedialab/medrec/DatabaseManager/common"
 )
 
 type PatientDocumentsArgs struct {
