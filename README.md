@@ -56,7 +56,7 @@ $ cd ..
 
 You need to be running a mysql database instance locally with username:password root:medrecpassword:
 - run query `/scripts/medrec-v1.sql`. It will create a schema called `medrec-v1` for you to store/retrieve information from. It is representing the "remote" DB.
-- run query `/scripts/medrecwebapp.sql` for the "local" DB.
+- run query `/scripts/medrecWebApp.sql` for the "local" DB.
 
 If you do not want to be able to look at the example patient records you can skip this section.
 
@@ -116,9 +116,9 @@ mysql -u password -p < medrec-v1.sql
 ```
 It will create a schema called `medrec-v1` for you to store/retrieve information from. It is representing the "remote" DB.
 
-- run query `/scripts/medrecwebapp.sql` for the "local" DB:
+- run query `/scripts/medrecWebApp.sql` for the "local" DB:
 ```
-mysql -u password -p < medrecwebapp.sql
+mysql -u password -p < medrecWebApp.sql
 ```
 
 `$ go run main.go DatabaseManager`
