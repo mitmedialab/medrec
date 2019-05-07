@@ -159,7 +159,7 @@ contract AgentRegistry {
 
     if(isKicked[prospective]) {
       bool overwrite = false;
-      for(uint i = 0; i < kicked.length; i++) {
+      for(uint i = 0; i < signers.length; i++) {
         if(overwrite) {
           signers[i - 1] = signers[i];
         }
