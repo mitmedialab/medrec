@@ -2,6 +2,9 @@
 ##### _Patient controlled medical records_
 
 ---
+THIS PROJECT IS CURRENTLY NOT MAINTAINED
+
+---
 
 https://medrec.media.mit.edu
 
